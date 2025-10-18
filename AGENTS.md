@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **PM Me Planner** is a macOS desktop application for calendar-based time block management with integrated AI accountability. Built with Tauri 2.0, React, TypeScript, and Supabase, it helps solo developers organize work through 2-3 hour sprint blocks with task management, Google Calendar integration, and embedded Claude Code terminal for AI-driven schedule manipulation.
 
 **Current Status:**
-- Prerequisites setup (Part 1) complete: Xcode CLI tools, Rust, Node.js, Supabase project, Google Calendar API configured
-- Ready to begin Part 2 (Phase 1): Project initialization and setup
+- ✅ Prerequisites setup (Part 1) complete: Xcode CLI tools, Rust, Node.js, Supabase project, Google Calendar API configured
+- ✅ Phase 1 (Foundation & Project Setup) complete: Tauri 2.0 + React + TypeScript + Vite app running with Supabase connection
+- Ready to begin Phase 2: Database Schema & Models
 - Linear epics and issues created for parallel agent execution
 
 ## Core Architecture
@@ -17,8 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Frontend:**
 - React + TypeScript + Vite
-- UI Components: Considering alternatives to shadcn/ui (TBD - may explore other frameworks)
-- Tailwind CSS
+- UI Components: TBD (considering alternatives to shadcn/ui)
+- Styling: TBD (may or may not use Tailwind CSS)
 - Zustand or Jotai (state management)
 - xterm.js (embedded terminal)
 - React Big Calendar (calendar display)
@@ -82,6 +83,39 @@ interface Task {
 ```
 
 **Design Principle:** Simple, semantic field names and relationships for easy AI querying and manipulation via SQL.
+
+## Before Implementation - Required Documentation Review
+
+**CRITICAL: All agents MUST reference the framework documentation in `docs/` before implementing any integration code or configuration.**
+
+The `docs/` directory contains comprehensive reference material extracted from official documentation. Agents working on scaffolding, setup, or feature implementation should consult the relevant documentation files BEFORE writing code to ensure:
+- Configuration files follow framework best practices and latest API conventions
+- Integration patterns match current framework recommendations
+- All required dependencies and setup steps are included
+- Type definitions and API usage are accurate
+
+**Required Reading by Phase:**
+
+**Phase 1 (Foundation & Project Setup):**
+- `docs/tauri.md` - MUST read before creating `tauri.conf.json`, `Cargo.toml`, or any Rust backend code
+- `docs/supabase-js.md` - MUST read before implementing database client initialization
+
+**Phase 2-5 (Core Features):**
+- `docs/supabase-js.md` - Reference for all database queries, RLS policies, and real-time subscriptions
+- `docs/tauri-plugins.md` - Consult before adding notification, shell, dialog, or filesystem integrations
+
+**Phase 6 (Google Calendar Integration):**
+- `docs/google-calendar-api.md` - MUST read before implementing OAuth flow or calendar sync logic
+
+**Phase 7 (macOS Notifications):**
+- `docs/tauri-plugins.md` - Reference the notification plugin section
+
+**Phase 8 (Embedded Terminal):**
+- `docs/xterm-js.md` - MUST read before implementing terminal embedding
+- `docs/tauri-plugins.md` - Reference the shell plugin section
+
+**Documentation Precedence:**
+When conflicts arise between implementation-plan.md suggestions and official framework docs in `docs/`, the official documentation in `docs/` takes precedence. The implementation plan provides high-level guidance, but specific API usage, configuration syntax, and best practices should follow the framework documentation.
 
 ## Development Commands
 

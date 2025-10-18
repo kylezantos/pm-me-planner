@@ -165,8 +165,9 @@ Solo developer/professional managing multiple clients and personal projects who:
 ## Technical Stack
 
 ### Frontend
-- **Framework:** React with TypeScript
-- **UI Components:** shadcn/ui + Tailwind CSS
+- **Framework:** React with TypeScript + Vite
+- **UI Components:** TBD (considering alternatives to shadcn/ui)
+- **Styling:** TBD (may or may not use Tailwind CSS)
 - **State Management:** Zustand or Jotai (lightweight)
 - **Calendar Display:** React Big Calendar or similar
 - **Terminal:** xterm.js
