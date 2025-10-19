@@ -143,6 +143,34 @@
 
 ---
 
+### Phase 2.5: Work Session Tracking & Informal Tasks
+**Goal:** Enable informal work sessions without calendar blocking
+
+**Tasks:**
+1. Create migration for `work_sessions` table
+2. Alter `tasks` table to add new columns:
+   - `actual_start` / `actual_end` (timestamptz)
+   - `is_currently_active` (boolean)
+   - `ai_prompt_enabled` (boolean, default true)
+   - `focus_mode` (boolean, default false)
+3. Set up RLS policies for `work_sessions` table
+4. Update TypeScript types:
+   - Add `WorkSession` interface
+   - Update `Task` interface with new fields
+5. Build CRUD functions for work sessions:
+   - `startWorkSession(taskId, blockInstanceId?)`
+   - `endWorkSession(sessionId, notes?)`
+   - `listWorkSessionsForTask(taskId)`
+   - `getCurrentActiveSession(userId)`
+6. Update seed data to include sample work sessions
+7. Update DATABASE_SCHEMA.md with work session patterns
+
+**Deliverable:** Database support for dual-mode task execution (formal blocks + informal ad-hoc work)
+
+**Related Documentation:** DATABASE_SCHEMA.md
+
+---
+
 ### Phase 3: Core UI Components
 **Goal:** Build reusable UI components with shadcn/ui
 
@@ -152,18 +180,23 @@
 3. Create components:
    - `BlockTypeCard` - display block type info
    - `BlockInstanceCard` - display scheduled block
-   - `TaskCard` - display task with notes
+   - `TaskCard` - display task with notes, work session status
    - `TaskBacklog` - list of unassigned tasks
-   - `CalendarView` - daily/weekly calendar display
+   - `CalendarView` - daily/weekly calendar display (formal blocks only)
+   - `DailyPlanView` - TODAY's plan with blocks + unscheduled tasks
+   - `ActiveTaskIndicator` - shows currently active informal work
 4. Build layout shell (sidebar, main content area)
-5. Implement routing (if needed)
+5. Implement view toggle: Calendar ↔ Daily Plan
+6. Implement routing (if needed)
 
 **Deliverable:** Component library with Storybook-style preview
 
+**Note:** Includes new Daily Plan view for lightweight planning without calendar rigidity
+
 ---
 
-### Phase 4: Block Management
-**Goal:** Create, edit, and schedule blocks
+### Phase 4: Block Management & Informal Work
+**Goal:** Create, edit, and schedule blocks + support informal work sessions
 
 **Tasks:**
 1. Build "Create Block Type" form
@@ -174,11 +207,29 @@
    - Block type selector
    - Manual vs auto-recurring toggle
 3. Implement recurring block generation logic
-4. Create daily/weekly calendar view showing blocks
+4. Create daily/weekly calendar view showing blocks (formal only)
 5. Add edit/delete functionality for blocks
 6. Implement drag-and-drop rescheduling (nice-to-have)
+7. **Build "Start Working" button for informal sessions**
+   - Click to start work on any task without blocking calendar
+   - Creates `work_session` with no `block_instance_id`
+   - Sets `is_currently_active` = true
+8. **Build "Switch Task" functionality**
+   - End current session, start new one
+   - Prompt for session notes
+9. **Build "Currently Active Task" indicator**
+   - Prominently display active task with elapsed time
+   - Show in Daily Plan view and sidebar
+10. **Build AI prompt configuration UI**
+    - Per-task toggle for AI interrupts
+    - Focus mode toggle (no interrupts)
+11. **Build work session history view**
+    - See all past sessions for a task
+    - Total time spent analytics
 
-**Deliverable:** Fully functional block scheduling system
+**Deliverable:** Fully functional block scheduling system + informal work tracking
+
+**Note:** This phase now supports the Amie problem solution - work without calendar pollution
 
 ---
 
@@ -349,22 +400,24 @@
 ## Estimated Timeline
 
 **With multiple Claude Code/Codex subagents working in parallel:**
-- **Phases 1-2:** 1-2 days (foundation + database)
-- **Phases 3-5:** 2-3 days (UI + core features)
+- **Phases 1-2:** 1-2 days (foundation + database) ✅ **COMPLETED**
+- **Phase 2.5:** 0.5-1 day (work sessions enhancement) ← **NEW**
+- **Phases 3-5:** 2-4 days (UI + core features + informal work)
 - **Phases 6-7:** 1-2 days (calendar + notifications)
 - **Phases 8-9:** 1-2 days (Claude integration + standup)
 - **Phase 10:** 1-2 days (polish)
 
-**Total: 6-11 days of development** (with parallelization)
+**Total: 6.5-12 days of development** (with parallelization)
 
 ---
 
 ## Phase Status Tracking
 
-- [ ] Phase 1: Foundation & Project Setup
-- [ ] Phase 2: Database Schema & Models
-- [ ] Phase 3: Core UI Components
-- [ ] Phase 4: Block Management
+- [x] Phase 1: Foundation & Project Setup
+- [x] Phase 2: Database Schema & Models
+- [ ] Phase 2.5: Work Session Tracking & Informal Tasks ← **NEW**
+- [ ] Phase 3: Core UI Components (Updated with Daily Plan view)
+- [ ] Phase 4: Block Management & Informal Work (Enhanced)
 - [ ] Phase 5: Task Management & Backlog
 - [ ] Phase 6: Google Calendar Integration
 - [ ] Phase 7: macOS Notifications System
@@ -375,6 +428,6 @@
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-10-17
-**Status:** Initial Plan
+**Document Version:** 1.1
+**Last Updated:** 2025-10-18
+**Status:** Updated with Informal Work Sessions feature

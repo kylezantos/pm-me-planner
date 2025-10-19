@@ -11,7 +11,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+  },
+});
 
 // Helper function to test database connection
 // This uses the auth endpoint to verify we can connect to Supabase

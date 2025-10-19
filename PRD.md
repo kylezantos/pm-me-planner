@@ -52,6 +52,22 @@ Solo developer/professional managing multiple clients and personal projects who:
 - Quick add/edit/remove tasks
 - Tasks include notes field for context and progress tracking
 
+**Dual-Mode Task Execution (NEW):**
+- **Formal Mode**: Tasks assigned to scheduled blocks, shows in calendar
+- **Informal Mode**: Work on tasks ad-hoc without creating calendar blocks
+- "Start Working" button to begin informal work session
+- Tracks elapsed time and work history per task
+- Switch between tasks without formal scheduling
+- Does NOT pollute Google Calendar with work intentions
+
+**Work Session Tracking:**
+- Each work session recorded with start/end times
+- Sessions can be formal (within a block) or informal (ad-hoc)
+- View work history: see all past sessions for a task
+- AI accountability: tracks time spent vs. estimated duration
+- Optional AI prompts based on time elapsed (configurable per task)
+- Focus mode: disable all interrupts for deep work
+
 **Unfinished Task Handling:**
 - Tasks not completed during a block automatically return to the backlog
 - User can add notes about where they left off
@@ -79,10 +95,12 @@ Solo developer/professional managing multiple clients and personal projects who:
 ### 4. Calendar Integration
 
 **Google Calendar Sync:**
-- Two-way sync with Google Calendar
+- Read calendar events (MVP: read-only, two-way sync in Phase 11)
 - Display calendar events alongside blocks
 - Block creation from calendar events (optional)
 - Conflict detection and warnings
+- **Formal blocks can sync to calendar** (future: two-way)
+- **Informal work sessions do NOT sync** (keeps calendar clean)
 
 **Meeting Overlap Behavior:**
 - Calendar meetings can overlap with focus blocks
@@ -93,8 +111,13 @@ Solo developer/professional managing multiple clients and personal projects who:
   - Time spent in meeting doesn't count against block duration
 
 **Views:**
-- Daily view (primary)
-- Weekly view
+- **Calendar View**: Daily/weekly calendar showing formal blocks and Google Calendar events
+- **Daily Plan View (NEW)**: Lightweight today-focused view without calendar rigidity
+  - Shows today's scheduled blocks
+  - Shows Google Calendar commitments (read-only)
+  - Lists unscheduled tasks with time estimates
+  - Displays currently active informal work session
+  - Toggle between Calendar and Daily Plan views (Cmd+D)
 - Block timeline visualization
 
 ### 5. Notification System
