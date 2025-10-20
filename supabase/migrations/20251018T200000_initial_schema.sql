@@ -236,6 +236,7 @@ alter table public.user_preferences enable row level security;
 alter table public.calendar_connections enable row level security;
 alter table public.calendar_events enable row level security;
 alter table public.work_sessions enable row level security;
+alter table public.notification_queue enable row level security;
 
 -- Helper function to extract auth uid from request context
 create or replace function public.current_auth_uid()
@@ -304,6 +305,15 @@ create policy if not exists work_sessions_select_self on public.work_sessions
     for select using (user_id = public.current_auth_uid());
 
 create policy if not exists work_sessions_modify_self on public.work_sessions
+    for all
+    using (user_id = public.current_auth_uid())
+    with check (user_id = public.current_auth_uid());
+
+-- Notification queue policies
+create policy if not exists notification_queue_select_self on public.notification_queue
+    for select using (user_id = public.current_auth_uid());
+
+create policy if not exists notification_queue_modify_self on public.notification_queue
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
