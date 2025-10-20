@@ -114,6 +114,53 @@ export async function listBlockInstances(
   return toResult<BlockInstance[]>(data, error);
 }
 
+// Joined shape for calendar/event use-cases
+export type BlockInstanceWithType = BlockInstance & {
+  // Supabase nested select returns the related table name as the key
+  block_types: Pick<BlockType, 'id' | 'name' | 'color'> | null;
+};
+
+/**
+ * Lists block instances within a time range and includes their Block Type
+ * metadata (name, color) for calendar rendering. Results are ordered by
+ * planned_start ascending.
+ */
+export async function listBlockInstancesWithType(
+  filters: Partial<{
+    user_id: string;
+    block_type_id: string;
+    status: BlockStatus;
+    start_gte: string;
+    start_lt: string;
+  }> = {}
+): Promise<Result<BlockInstanceWithType[]>> {
+  let query = supabase
+    .from('block_instances')
+    .select('*, block_types(id, name, color)');
+
+  if (filters.user_id) {
+    query = query.eq('user_id', filters.user_id);
+  }
+  if (filters.block_type_id) {
+    query = query.eq('block_type_id', filters.block_type_id);
+  }
+  if (filters.status) {
+    query = query.eq('status', filters.status);
+  }
+  if (filters.start_gte) {
+    query = query.gte('planned_start', filters.start_gte);
+  }
+  if (filters.start_lt) {
+    query = query.lt('planned_start', filters.start_lt);
+  }
+
+  const { data, error } = await query.order('planned_start', {
+    ascending: true,
+  });
+
+  return toResult<BlockInstanceWithType[]>(data as BlockInstanceWithType[] | null, error);
+}
+
 export async function createBlockInstance(
   values: Omit<BlockInstance, 'id' | 'created_at' | 'updated_at'>
 ): Promise<Result<BlockInstance>> {
@@ -358,7 +405,7 @@ export async function endWorkSession(
   const updates: Partial<WorkSession> = {
     ended_at: endedAt,
     duration_minutes: durationMinutes,
-    notes: options.notes ?? undefined,
+    notes: options.notes ?? null,
   };
 
   const { data, error } = await supabase

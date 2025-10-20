@@ -10,7 +10,6 @@ const requiredEnvVars = [
 
 const optionalEnvVars = [
   'VITE_GOOGLE_CLIENT_ID',
-  'VITE_GOOGLE_CLIENT_SECRET',
   'VITE_GOOGLE_REDIRECT_URI',
   'VITE_ANTHROPIC_API_KEY',
 ] as const;

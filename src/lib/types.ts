@@ -7,7 +7,8 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export type OAuthScope =
   | 'https://www.googleapis.com/auth/calendar'
   | 'https://www.googleapis.com/auth/calendar.events'
-  | 'https://www.googleapis.com/auth/calendar.readonly';
+  | 'https://www.googleapis.com/auth/calendar.readonly'
+  | 'https://www.googleapis.com/auth/userinfo.email';
 
 export interface BlockType {
   id: string;
@@ -86,8 +87,6 @@ export interface CalendarConnection {
   user_id: string;
   provider: string;
   account_email: string;
-  access_token: string;
-  refresh_token: string | null;
   token_expiry: string | null;
   scopes: OAuthScope[];
   is_primary: boolean;
@@ -142,7 +141,7 @@ export interface SeedUser {
 export type NotificationType =
   | 'block_upcoming'
   | 'block_start'
-  | 'block_paused_meeting'
+  | 'block_paused'
   | 'block_resumed'
   | 'standup';
 
@@ -155,4 +154,27 @@ export interface NotificationQueueItem {
   sent_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface StandupPayload {
+  time?: string;
+}
+
+export type BlockNotificationPayload = {
+  block_name?: string;
+  lead_minutes?: number;
+  block_type_id?: string;
+  block_instance_id?: string;
+  start_time?: string;
+  block_color?: string;
+} & Record<string, unknown>;
+
+export interface ScheduledNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  targetTime: string;
+  payload?: Record<string, unknown>;
+  createdAt: string;
+  sentAt?: string;
 }

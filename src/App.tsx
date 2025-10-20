@@ -1,14 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { validateEnv } from "./lib/env";
 import { testConnection } from "./lib/supabase";
+import { NotificationQueueService } from "./lib/notifications/queue";
+import { ensureNotificationActionsRegistered, NotificationRunner } from "./lib/notifications";
+import { startNotifications, type NotificationServiceHandle } from "./lib/notifications";
+import { sendQueuedNotification } from "./lib/notifications/sender";
 import "./App.css";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "error">("checking");
+
+  const notificationQueue = useMemo(() => new NotificationQueueService(), []);
 
   useEffect(() => {
     // Validate environment variables on mount
@@ -23,6 +29,31 @@ function App() {
       console.error("Environment validation failed:", error);
       setDbStatus("error");
     }
+  }, []);
+
+  useEffect(() => {
+    const userId = import.meta.env.VITE_DEBUG_USER_ID;
+    let handle: NotificationServiceHandle | null = null;
+    if (userId) {
+      handle = startNotifications({
+        userId,
+        deliveryIntervalMs: 30_000,
+        scheduleIntervalMs: 60_000,
+        lookaheadMinutes: 60,
+        debounceMs: 3_000,
+        minTickIntervalMs: 5_000,
+        listenRealtime: true,
+      });
+    }
+    return () => {
+      handle?.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    ensureNotificationActionsRegistered().catch((error) => {
+      console.error("Failed to register notification actions:", error);
+    });
   }, []);
 
   async function greet() {
@@ -72,6 +103,41 @@ function App() {
         />
         <button type="submit">Greet</button>
       </form>
+      {import.meta.env.VITE_DEBUG_USER_ID ? (
+        <button
+          type="button"
+          onClick={async () => {
+            const now = new Date();
+            now.setSeconds(now.getSeconds() + 5);
+
+            const userId = import.meta.env.VITE_DEBUG_USER_ID;
+            if (!userId) {
+              return;
+            }
+
+            await notificationQueue.enqueue(userId, [
+              {
+                type: 'block_upcoming',
+                targetTime: now.toISOString(),
+                payload: {
+                  block_name: 'Test block',
+                  lead_minutes: 5,
+                },
+              },
+            ]);
+
+            const runner = new NotificationRunner({ userId, intervalMs: 2_000 });
+            await runner.tick();
+
+            const due = await notificationQueue.listDueNotifications(userId);
+            for (const item of due) {
+              await sendQueuedNotification(item);
+            }
+          }}
+        >
+          Send test notification
+        </button>
+      ) : null}
       <p>{greetMsg}</p>
     </main>
   );

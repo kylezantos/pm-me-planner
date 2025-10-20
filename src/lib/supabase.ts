@@ -27,7 +27,6 @@ export async function testConnection(): Promise<boolean> {
       console.error('Supabase connection error:', error);
       return false;
     }
-    console.log('✅ Supabase connection successful!');
     return true;
   } catch (err) {
     console.error('Supabase connection test failed:', err);

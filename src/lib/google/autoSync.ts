@@ -1,18 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CalendarConnection } from '../types';
 import { syncCalendarEvents } from './calendarSyncService';
+import {
+  isTokenExpiring,
+  refreshConnectionTokens,
+} from './tokenManager';
 
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000;
 
 interface AutoSyncConfig {
   supabaseClient?: SupabaseClient;
   intervalMs?: number;
-  tokenSecret: string;
   credentials: {
     clientId: string;
     clientSecret: string;
     redirectUri: string;
   };
+  tokenSecret: string;
 }
 
 interface ConnectionWithTokens extends CalendarConnection {
@@ -115,25 +119,55 @@ export class AutoSyncScheduler {
       );
 
       await Promise.all(
-        connections.map((connection) =>
-          syncCalendarEvents({
-            connectionId: connection.id,
-            userId: connection.user_id,
-            credentials: this.config.credentials,
-            accessToken: connection.accessToken,
-            refreshToken: connection.refreshToken,
-            expiryDate: connection.token_expiry
-              ? new Date(connection.token_expiry).getTime()
-              : undefined,
-            syncToken: connection.sync_token ?? undefined,
-          }, this.client).catch((error) => {
+        connections.map(async (connection) => {
+          let currentAccessToken = connection.accessToken;
+          let currentRefreshToken = connection.refreshToken ?? null;
+          let currentConnection: CalendarConnection = connection;
+
+          if (
+            currentRefreshToken &&
+            isTokenExpiring(connection.token_expiry)
+          ) {
+            try {
+              const refreshed = await refreshConnectionTokens(
+                connection,
+                currentRefreshToken
+              );
+
+              currentAccessToken = refreshed.accessToken;
+              currentRefreshToken = refreshed.refreshToken;
+              currentConnection = refreshed.connection;
+            } catch (error) {
+              console.error(
+                'Failed to refresh calendar connection %s: %s',
+                connection.id,
+                error
+              );
+              return;
+            }
+          }
+
+          await syncCalendarEvents(
+            {
+              connectionId: currentConnection.id,
+              userId: currentConnection.user_id,
+              credentials: this.config.credentials,
+              accessToken: currentAccessToken,
+              refreshToken: currentRefreshToken ?? undefined,
+              expiryDate: currentConnection.token_expiry
+                ? new Date(currentConnection.token_expiry).getTime()
+                : undefined,
+              syncToken: currentConnection.sync_token ?? undefined,
+            },
+            this.client
+          ).catch((error) => {
             console.error(
               'Failed to sync calendar connection %s: %s',
-              connection.id,
+              currentConnection.id,
               error
             );
-          })
-        )
+          });
+        })
       );
     } finally {
       this.running = false;

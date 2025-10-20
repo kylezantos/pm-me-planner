@@ -1,69 +1,55 @@
-import { google } from 'googleapis';
+import crypto from 'crypto';
+import type { OAuthScope } from '../types';
 
-export type OAuthScope =
-  | 'https://www.googleapis.com/auth/calendar'
-  | 'https://www.googleapis.com/auth/calendar.events'
-  | 'https://www.googleapis.com/auth/calendar.readonly';
+export interface PkcePair {
+  codeVerifier: string;
+  codeChallenge: string;
+}
+
+export function createPkcePair(): PkcePair {
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const codeChallenge = crypto
+    .createHash('sha256')
+    .update(codeVerifier)
+    .digest('base64url');
+
+  return { codeVerifier, codeChallenge };
+}
 
 interface GenerateAuthUrlParams {
   clientId: string;
-  clientSecret: string;
   redirectUri: string;
   scopes: OAuthScope[];
+  state: string;
+  codeChallenge: string;
   loginHint?: string;
 }
 
 export function generateAuthUrl(params: GenerateAuthUrlParams): string {
-  const { clientId, clientSecret, redirectUri, scopes, loginHint } = params;
-
-  const oauth2Client = new google.auth.OAuth2({
+  const {
     clientId,
-    clientSecret,
     redirectUri,
-  });
+    scopes,
+    state,
+    codeChallenge,
+    loginHint,
+  } = params;
 
-  return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent',
-    include_granted_scopes: true,
-    login_hint: loginHint,
-  });
-}
+  const baseUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  baseUrl.searchParams.set('client_id', clientId);
+  baseUrl.searchParams.set('redirect_uri', redirectUri);
+  baseUrl.searchParams.set('response_type', 'code');
+  baseUrl.searchParams.set('scope', scopes.join(' '));
+  baseUrl.searchParams.set('access_type', 'offline');
+  baseUrl.searchParams.set('include_granted_scopes', 'true');
+  baseUrl.searchParams.set('prompt', 'consent');
+  baseUrl.searchParams.set('state', state);
+  baseUrl.searchParams.set('code_challenge', codeChallenge);
+  baseUrl.searchParams.set('code_challenge_method', 'S256');
 
-interface ExchangeCodeParams {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  code: string;
-}
+  if (loginHint) {
+    baseUrl.searchParams.set('login_hint', loginHint);
+  }
 
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken?: string;
-  expiryDate?: number;
-  scope?: string;
-  tokenType?: string;
-}
-
-export async function exchangeCodeForTokens(
-  params: ExchangeCodeParams
-): Promise<TokenResponse> {
-  const { clientId, clientSecret, redirectUri, code } = params;
-
-  const oauth2Client = new google.auth.OAuth2({
-    clientId,
-    clientSecret,
-    redirectUri,
-  });
-
-  const { tokens } = await oauth2Client.getToken(code);
-
-  return {
-    accessToken: tokens.access_token ?? '',
-    refreshToken: tokens.refresh_token ?? undefined,
-    expiryDate: tokens.expiry_date ?? undefined,
-    scope: tokens.scope ?? undefined,
-    tokenType: tokens.token_type ?? undefined,
-  };
+  return baseUrl.toString();
 }

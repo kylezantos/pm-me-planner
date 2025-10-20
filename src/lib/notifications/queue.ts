@@ -5,6 +5,7 @@ import type {
   NotificationType,
   BlockInstance,
 } from '../types';
+import { getUserPreferences } from '../repositories';
 import { scheduleBlockNotifications } from './scheduler';
 
 const DEFAULT_LOOKAHEAD_MINUTES = 60;
@@ -39,32 +40,46 @@ export class NotificationQueueService {
       payload: notification.payload ?? null,
     }));
 
-    const { error } = await this.client
-      .from('notification_queue')
-      .insert(records);
+    try {
+      const { error } = await this.client
+        .from('notification_queue')
+        .insert(records);
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.error('[NotificationQueue] Failed to enqueue', error);
+        throw new Error(`Failed to enqueue notifications: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('[NotificationQueue] Unexpected enqueue error', err);
+      throw err;
     }
   }
 
   async listDueNotifications(
     userId: string,
-    now: Date = new Date()
+    now: Date = new Date(),
+    limit: number = 100
   ): Promise<NotificationQueueItem[]> {
-    const { data, error } = await this.client
-      .from('notification_queue')
-      .select('*')
-      .eq('user_id', userId)
-      .is('sent_at', null)
-      .lte('target_time', now.toISOString())
-      .order('target_time', { ascending: true });
+    try {
+      const { data, error } = await this.client
+        .from('notification_queue')
+        .select('*')
+        .eq('user_id', userId)
+        .is('sent_at', null)
+        .lte('target_time', now.toISOString())
+        .order('target_time', { ascending: true })
+        .limit(limit);
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.error('[NotificationQueue] listDueNotifications failed', error);
+        throw new Error(`Failed to fetch due notifications: ${error.message}`);
+      }
+
+      return (data ?? []) as NotificationQueueItem[];
+    } catch (err) {
+      console.error('[NotificationQueue] Unexpected listDue error', err);
+      throw err;
     }
-
-    return (data ?? []) as NotificationQueueItem[];
   }
 
   async markSent(ids: string[]): Promise<void> {
@@ -72,13 +87,19 @@ export class NotificationQueueService {
       return;
     }
 
-    const { error } = await this.client
-      .from('notification_queue')
-      .update({ sent_at: new Date().toISOString() })
-      .in('id', ids);
+    try {
+      const { error } = await this.client
+        .from('notification_queue')
+        .update({ sent_at: new Date().toISOString() })
+        .in('id', ids);
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.error('[NotificationQueue] markSent failed', error);
+        throw new Error(`Failed to mark notifications sent: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('[NotificationQueue] Unexpected markSent error', err);
+      throw err;
     }
   }
 
@@ -86,7 +107,8 @@ export class NotificationQueueService {
     userId: string,
     blocks: BlockInstance[],
     now: Date = new Date(),
-    lookaheadMinutes: number = DEFAULT_LOOKAHEAD_MINUTES
+    lookaheadMinutes: number = DEFAULT_LOOKAHEAD_MINUTES,
+    blockTypeMeta?: Map<string, { name?: string; color?: string }>
   ): Promise<void> {
     const cutoff = new Date(now.getTime() + lookaheadMinutes * 60 * 1000);
 
@@ -98,6 +120,7 @@ export class NotificationQueueService {
       .lte('target_time', cutoff.toISOString());
 
     if (error) {
+      console.error('[NotificationQueue] Failed to fetch upcoming targets', error);
       throw new Error(error.message);
     }
 
@@ -105,11 +128,21 @@ export class NotificationQueueService {
       (data ?? []).map((item) => item.target_time)
     );
 
+    const preferencesResult = await getUserPreferences(userId);
+    if (preferencesResult.error) {
+      throw new Error(preferencesResult.error.message);
+    }
+
+    const preferences = preferencesResult.data ?? null;
+
     const scheduled = scheduleBlockNotifications({
       userId,
       blocks,
       now,
       upcomingWarningMinutes: 10,
+      standupTime: preferences?.standup_time ?? null,
+      preferences,
+      blockTypeMeta,
     });
 
     const deduped = scheduled.filter((notification) => {
@@ -129,5 +162,28 @@ export class NotificationQueueService {
     }
 
     await this.enqueue(userId, deduped);
+  }
+
+  async cleanupOldNotifications(
+    userId: string,
+    daysToKeep: number = 30
+  ): Promise<void> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - daysToKeep);
+
+    try {
+      const { error } = await this.client
+        .from('notification_queue')
+        .delete()
+        .eq('user_id', userId)
+        .not('sent_at', 'is', null)
+        .lt('sent_at', cutoff.toISOString());
+
+      if (error) {
+        console.error('[NotificationQueue] cleanupOldNotifications failed', error);
+      }
+    } catch (err) {
+      console.error('[NotificationQueue] Unexpected cleanup error', err);
+    }
   }
 }

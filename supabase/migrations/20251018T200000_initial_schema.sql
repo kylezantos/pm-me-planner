@@ -110,6 +110,8 @@ create index if not exists work_sessions_user_id_idx on public.work_sessions (us
 create index if not exists work_sessions_task_id_idx on public.work_sessions (task_id);
 create index if not exists work_sessions_started_idx on public.work_sessions (started_at);
 create index if not exists work_sessions_block_instance_id_idx on public.work_sessions (block_instance_id);
+-- Active sessions partial index for fast lookups
+create index if not exists work_sessions_active_idx on public.work_sessions (user_id) where ended_at is null;
 
 -- Table: user_preferences
 create table if not exists public.user_preferences (

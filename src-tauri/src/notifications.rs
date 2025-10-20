@@ -1,12 +1,23 @@
-use tauri_plugin_notification::{NotificationExt, NotificationOpts};
+use tauri_plugin_notification::NotificationExt;
 
-pub fn send_notification(app: &tauri::AppHandle, title: &str, body: &str, identifier: Option<&str>) {
-    let opts = NotificationOpts {
-        identifier: identifier.map(|id| id.to_string()).unwrap_or_default(),
-        title: title.to_string(),
-        body: Some(body.to_string()),
-        ..Default::default()
-    };
+#[tauri::command]
+pub async fn send_notification(
+    app: tauri::AppHandle,
+    title: String,
+    body: String,
+) -> Result<(), String> {
+    let res = app
+        .notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show();
 
-    let _ = app.notification().show(opts);
+    match res {
+        Ok(_) => Ok(()),
+        Err(error) => {
+            eprintln!("Failed to display notification: {}", error);
+            Err(format!("Failed to display notification: {error}"))
+        }
+    }
 }

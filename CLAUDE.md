@@ -183,7 +183,6 @@ VITE_SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
 
 # Google Calendar (get from https://console.cloud.google.com)
 VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 VITE_GOOGLE_REDIRECT_URI=http://localhost:1420/oauth/callback
 
 # Optional: Claude Code API access (if using HTTP API instead of embedded terminal)

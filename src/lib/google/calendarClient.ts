@@ -1,6 +1,6 @@
 import { google, calendar_v3 } from 'googleapis';
 
-interface CalendarClientParams {
+export interface CalendarCredentials {
   accessToken: string;
   refreshToken?: string;
   clientId: string;
@@ -9,12 +9,14 @@ interface CalendarClientParams {
   expiryDate?: number;
 }
 
-export function createCalendarClient(
-  params: CalendarClientParams
-): calendar_v3.Calendar {
-  const { accessToken, refreshToken, clientId, clientSecret, redirectUri, expiryDate } =
-    params;
-
+export function createCalendarClient({
+  accessToken,
+  refreshToken,
+  clientId,
+  clientSecret,
+  redirectUri,
+  expiryDate,
+}: CalendarCredentials): calendar_v3.Calendar {
   const oauth2Client = new google.auth.OAuth2({
     clientId,
     clientSecret,
