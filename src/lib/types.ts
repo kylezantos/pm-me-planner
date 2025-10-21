@@ -1,8 +1,19 @@
-export type BlockStatus = 'scheduled' | 'in_progress' | 'paused' | 'completed' | 'skipped';
+import { Database } from './database.types';
 
-export type TaskStatus = 'pending' | 'in_progress' | 'completed';
+// Export types from generated database types
+export type BlockStatus = Database['public']['Enums']['block_status'];
+export type TaskStatus = Database['public']['Enums']['task_status'];
+export type TaskPriority = Database['public']['Enums']['task_priority'];
 
-export type TaskPriority = 'low' | 'medium' | 'high';
+// Insert and Update types for mutations
+export type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
+export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
+
+export type BlockInstanceInsert = Database['public']['Tables']['block_instances']['Insert'];
+export type BlockInstanceUpdate = Database['public']['Tables']['block_instances']['Update'];
+
+export type BlockTypeInsert = Database['public']['Tables']['block_types']['Insert'];
+export type BlockTypeUpdate = Database['public']['Tables']['block_types']['Update'];
 
 export type OAuthScope =
   | 'https://www.googleapis.com/auth/calendar'
@@ -177,4 +188,30 @@ export interface ScheduledNotification {
   payload?: Record<string, unknown>;
   createdAt: string;
   sentAt?: string;
+}
+
+// Extended types with relationships for UI
+export interface TaskWithBlockType extends Task {
+  block_type?: BlockType;
+}
+
+export interface BlockInstanceWithDetails extends BlockInstance {
+  block_type?: BlockType;
+  tasks?: Task[];
+}
+
+// UI Form types
+export interface TaskFormData {
+  title: string;
+  description?: string;
+  block_type_id: string;
+  priority?: TaskPriority;
+  estimated_duration_minutes?: number;
+}
+
+export interface BlockInstanceFormData {
+  block_type_id: string;
+  planned_start: string; // ISO 8601
+  planned_end: string;   // ISO 8601
+  notes?: string;
 }

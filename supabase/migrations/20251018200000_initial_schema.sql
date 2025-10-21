@@ -22,7 +22,7 @@ end $$;
 
 -- Core table: block_types
 create table if not exists public.block_types (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     name text not null,
     color text not null,
@@ -44,7 +44,7 @@ create index if not exists block_types_user_id_idx on public.block_types (user_i
 
 -- Core table: block_instances
 create table if not exists public.block_instances (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     block_type_id uuid not null references public.block_types(id) on delete cascade,
     planned_start timestamptz not null,
@@ -66,7 +66,7 @@ create index if not exists block_instances_planned_start_idx on public.block_ins
 
 -- Core table: tasks
 create table if not exists public.tasks (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     block_type_id uuid not null references public.block_types(id) on delete cascade,
     block_instance_id uuid references public.block_instances(id) on delete set null,
@@ -93,7 +93,7 @@ create index if not exists tasks_status_idx on public.tasks (status);
 
 -- Table: work_sessions
 create table if not exists public.work_sessions (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     task_id uuid not null references public.tasks(id) on delete cascade,
     block_instance_id uuid references public.block_instances(id) on delete set null,
@@ -110,7 +110,6 @@ create index if not exists work_sessions_user_id_idx on public.work_sessions (us
 create index if not exists work_sessions_task_id_idx on public.work_sessions (task_id);
 create index if not exists work_sessions_started_idx on public.work_sessions (started_at);
 create index if not exists work_sessions_block_instance_id_idx on public.work_sessions (block_instance_id);
--- Active sessions partial index for fast lookups
 create index if not exists work_sessions_active_idx on public.work_sessions (user_id) where ended_at is null;
 
 -- Table: user_preferences
@@ -132,7 +131,7 @@ create table if not exists public.user_preferences (
 
 -- Table: calendar_connections
 create table if not exists public.calendar_connections (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     provider text not null default 'google',
     account_email text not null,
@@ -152,7 +151,7 @@ create index if not exists calendar_connections_account_email_idx on public.cale
 
 -- Table: calendar_events
 create table if not exists public.calendar_events (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     calendar_connection_id uuid not null references public.calendar_connections(id) on delete cascade,
     external_event_id text not null,
@@ -179,7 +178,7 @@ create index if not exists calendar_events_time_range_idx on public.calendar_eve
 
 -- Notification queue
 create table if not exists public.notification_queue (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     user_id uuid not null,
     type text not null,
     target_time timestamptz not null,
@@ -192,7 +191,6 @@ create table if not exists public.notification_queue (
 create index if not exists notification_queue_user_id_idx on public.notification_queue (user_id);
 create index if not exists notification_queue_target_time_idx on public.notification_queue (target_time);
 
-
 -- Ensure timestamps auto-update on modification
 create or replace function public.set_updated_at()
 returns trigger as $$
@@ -202,33 +200,50 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_block_types_updated_at
-    before update on public.block_types
-    for each row execute function public.set_updated_at();
+do $$
+begin
+    if not exists (select 1 from pg_trigger where tgname = 'set_block_types_updated_at') then
+        create trigger set_block_types_updated_at
+            before update on public.block_types
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_block_instances_updated_at
-    before update on public.block_instances
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_block_instances_updated_at') then
+        create trigger set_block_instances_updated_at
+            before update on public.block_instances
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_tasks_updated_at
-    before update on public.tasks
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_tasks_updated_at') then
+        create trigger set_tasks_updated_at
+            before update on public.tasks
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_work_sessions_updated_at
-    before update on public.work_sessions
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_work_sessions_updated_at') then
+        create trigger set_work_sessions_updated_at
+            before update on public.work_sessions
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_user_preferences_updated_at
-    before update on public.user_preferences
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_user_preferences_updated_at') then
+        create trigger set_user_preferences_updated_at
+            before update on public.user_preferences
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_calendar_connections_updated_at
-    before update on public.calendar_connections
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_calendar_connections_updated_at') then
+        create trigger set_calendar_connections_updated_at
+            before update on public.calendar_connections
+            for each row execute function public.set_updated_at();
+    end if;
 
-create trigger set_calendar_events_updated_at
-    before update on public.calendar_events
-    for each row execute function public.set_updated_at();
+    if not exists (select 1 from pg_trigger where tgname = 'set_calendar_events_updated_at') then
+        create trigger set_calendar_events_updated_at
+            before update on public.calendar_events
+            for each row execute function public.set_updated_at();
+    end if;
+end $$;
 
 -- Row Level Security
 alter table public.block_types enable row level security;
@@ -247,75 +262,82 @@ returns uuid as $$
 $$ language sql stable;
 
 -- RLS Policies
-
--- Block types policies
-create policy if not exists block_types_select_self on public.block_types
+drop policy if exists block_types_select_self on public.block_types;
+create policy block_types_select_self on public.block_types
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists block_types_modify_self on public.block_types
+drop policy if exists block_types_modify_self on public.block_types;
+create policy block_types_modify_self on public.block_types
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Block instances policies
-create policy if not exists block_instances_select_self on public.block_instances
+drop policy if exists block_instances_select_self on public.block_instances;
+create policy block_instances_select_self on public.block_instances
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists block_instances_modify_self on public.block_instances
+drop policy if exists block_instances_modify_self on public.block_instances;
+create policy block_instances_modify_self on public.block_instances
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Tasks policies
-create policy if not exists tasks_select_self on public.tasks
+drop policy if exists tasks_select_self on public.tasks;
+create policy tasks_select_self on public.tasks
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists tasks_modify_self on public.tasks
+drop policy if exists tasks_modify_self on public.tasks;
+create policy tasks_modify_self on public.tasks
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- User preferences policies
-create policy if not exists user_preferences_select_self on public.user_preferences
+drop policy if exists user_preferences_select_self on public.user_preferences;
+create policy user_preferences_select_self on public.user_preferences
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists user_preferences_modify_self on public.user_preferences
+drop policy if exists user_preferences_modify_self on public.user_preferences;
+create policy user_preferences_modify_self on public.user_preferences
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Calendar connections policies
-create policy if not exists calendar_connections_select_self on public.calendar_connections
+drop policy if exists calendar_connections_select_self on public.calendar_connections;
+create policy calendar_connections_select_self on public.calendar_connections
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists calendar_connections_modify_self on public.calendar_connections
+drop policy if exists calendar_connections_modify_self on public.calendar_connections;
+create policy calendar_connections_modify_self on public.calendar_connections
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Calendar events policies
-create policy if not exists calendar_events_select_self on public.calendar_events
+drop policy if exists calendar_events_select_self on public.calendar_events;
+create policy calendar_events_select_self on public.calendar_events
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists calendar_events_modify_self on public.calendar_events
+drop policy if exists calendar_events_modify_self on public.calendar_events;
+create policy calendar_events_modify_self on public.calendar_events
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Work sessions policies
-create policy if not exists work_sessions_select_self on public.work_sessions
+drop policy if exists work_sessions_select_self on public.work_sessions;
+create policy work_sessions_select_self on public.work_sessions
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists work_sessions_modify_self on public.work_sessions
+drop policy if exists work_sessions_modify_self on public.work_sessions;
+create policy work_sessions_modify_self on public.work_sessions
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
 
--- Notification queue policies
-create policy if not exists notification_queue_select_self on public.notification_queue
+drop policy if exists notification_queue_select_self on public.notification_queue;
+create policy notification_queue_select_self on public.notification_queue
     for select using (user_id = public.current_auth_uid());
 
-create policy if not exists notification_queue_modify_self on public.notification_queue
+drop policy if exists notification_queue_modify_self on public.notification_queue;
+create policy notification_queue_modify_self on public.notification_queue
     for all
     using (user_id = public.current_auth_uid())
     with check (user_id = public.current_auth_uid());
@@ -363,7 +385,7 @@ set search_path = public
 as $$
 declare
     v_connection public.calendar_connections;
-    v_id uuid := coalesce(p_connection_id, uuid_generate_v4());
+    v_id uuid := coalesce(p_connection_id, gen_random_uuid());
 begin
     if p_user_id is null then
         raise exception 'user_id required';
