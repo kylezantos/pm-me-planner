@@ -158,3 +158,14 @@ pub async fn refresh_google_token(refresh_token: String) -> Result<TokenResponse
     .await
     .map_err(|err| err.to_string())
 }
+
+#[tauri::command]
+pub fn get_env_var(key: String) -> Result<String, String> {
+    match key.as_str() {
+        "GOOGLE_CLIENT_ID" => read_env("GOOGLE_CLIENT_ID").map_err(|err| err.to_string()),
+        "GOOGLE_CLIENT_SECRET" => derive_client_secret().map_err(|err| err.to_string()),
+        "GOOGLE_REDIRECT_URI" => read_env("GOOGLE_REDIRECT_URI").map_err(|err| err.to_string()),
+        "CALENDAR_TOKEN_SECRET" => read_env("CALENDAR_TOKEN_SECRET").map_err(|err| err.to_string()),
+        _ => Err(format!("Environment variable '{}' is not allowed", key)),
+    }
+}

@@ -12,12 +12,13 @@ export interface NotificationTestResult {
 export interface TestNotificationOptions {
   title?: string;
   body?: string;
+  sound?: boolean;
 }
 /**
  * Sends a test notification to validate notification behavior. Automatically
  * requests permission if not already granted.
  *
- * @param options Optional override for title/body content
+ * @param options Optional override for title/body content and sound setting
  * @returns Promise with permission status and any error encountered
  */
 export async function sendTestNotification(
@@ -36,6 +37,7 @@ export async function sendTestNotification(
     await sendNotification({
       title: options?.title ?? 'PM Me Planner',
       body: options?.body ?? 'Test notification for minimized app behavior',
+      sound: options?.sound !== undefined ? (options.sound ? 'default' : undefined) : 'default',
     });
 
     return { permissionGranted: true };

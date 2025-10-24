@@ -15,6 +15,13 @@ export default defineConfig(async () => ({
     },
   },
 
+  // Define global variables for Node.js compatibility
+  define: {
+    'process.env': {},
+    'process.version': JSON.stringify('v18.0.0'),
+    'process.platform': JSON.stringify('darwin'),
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

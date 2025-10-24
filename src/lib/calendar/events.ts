@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, format } from 'date-fns';
 import type { BlockStatus } from '../types';
 import { listBlockInstancesWithType, type BlockInstanceWithType } from '../repositories';
 
@@ -55,8 +55,8 @@ export function groupEventsByDay(
 ): Record<string, BlockCalendarEvent[]> {
   const grouped: Record<string, BlockCalendarEvent[]> = {};
   for (const ev of events) {
-    // Key by YYYY-MM-DD using ISO date (UTC). UI can remap to local as needed.
-    const key = ev.start.toISOString().slice(0, 10);
+    // Key by YYYY-MM-DD using local timezone to prevent off-by-one errors near midnight
+    const key = format(ev.start, 'yyyy-MM-dd');
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(ev);
   }

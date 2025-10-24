@@ -52,12 +52,12 @@ function DayView({ userId }: { userId: string }) {
 
 Under the hood, these subscribe to `block_instances` and `block_types` changes for the current user and refresh the current range.
 
-## Notifications (PER-76, PER-77)
+## Notifications (PER-76, PER-77, PER-161)
 
 Backend scheduling and delivery (no UI dependency) are implemented:
 
 - Scheduling: `NotificationSchedulerRunner` enqueues upcoming notifications using joined block metadata and user preferences (standup included).
-- Delivery: `NotificationRunner` polls the queue and delivers due notifications using Tauri’s notification plugin.
+- Delivery: `NotificationRunner` polls the queue and delivers due notifications using Tauri's notification plugin.
 - Realtime pause: `subscribePauseNotifications({ userId })` sends an immediate notification when a block transitions to `paused`.
 
 Initialization (gated)
@@ -84,22 +84,96 @@ Notes:
 - Payloads now include `block_name` and `block_color` for better titles/bodies.
 - Standup is scheduled for today or tomorrow depending on current time.
 - Scheduler uses debounced realtime triggers and throttling to avoid update storms.
- - Interactive actions supported (Start/Snooze/Skip) with registered action types; Snooze minutes configurable.
+- Interactive actions supported (Start/Snooze/Skip) with registered action types; Snooze minutes configurable.
 
-### Basic Tests
+### Default Notification Preferences (PER-161)
 
-Run minimal checks for `scheduleBlockNotifications` without a full test framework:
+On first run, the app automatically initializes default notification preferences for each user:
+
+```ts
+import { initializeUserPreferences } from './src/lib/repositories';
+
+const result = await initializeUserPreferences(userId);
+// Returns existing preferences or creates defaults if none exist
+```
+
+**Default values:**
+- `notifications_enabled`: `true`
+- `notification_sound_enabled`: `true`
+- `notification_lead_time_minutes`: `10` (10 minutes before block starts)
+- `standup_time`: `"09:00"` (9:00 AM)
+- `workday_start`: `"08:00"` (8:00 AM)
+- `workday_end`: `"18:00"` (6:00 PM)
+- `default_focus_minutes`: `25` (standard Pomodoro)
+- `default_short_break_minutes`: `5`
+- `default_long_break_minutes`: `15`
+- `default_sessions_before_long_break`: `4`
+
+**Behavior:**
+- Called automatically on app startup in `App.tsx`
+- If preferences already exist, the existing values are returned unchanged
+- Uses `upsert` with `user_id` conflict resolution to prevent duplicates
+- Validation ensures time formats are `HH:MM` and numeric values are positive
+- Failed validation returns an error without modifying the database
+
+### Preference Enforcement (PER-162)
+
+The notification system respects user preferences at every step:
+
+**1. Global notification toggle (`notifications_enabled`):**
+- When `false`, ALL notifications are suppressed (block notifications + standup)
+- When `true` or preferences are not set, notifications are enabled with defaults
+
+**2. Custom lead time (`notification_lead_time_minutes`):**
+- Controls how many minutes before a block start the "upcoming" notification fires
+- When set (e.g., `15`), overrides the default 10-minute warning
+- When `null`, falls back to the default `upcomingWarningMinutes` parameter (10 minutes)
+- Supports edge cases: `0` schedules notification at block start, large values (e.g., 120 minutes) work correctly
+
+**3. Standup scheduling (`standup_time`):**
+- When set (e.g., `"09:00"`), a daily standup notification is scheduled
+- Automatically schedules for today if time hasn't passed, otherwise tomorrow
+- When `null`, no standup notification is generated
+- Respects `notifications_enabled` - disabled notifications prevent standup even if `standup_time` is set
+
+**4. Implementation flow:**
+```ts
+// NotificationQueueService.scheduleBlocks():
+// 1. Fetches user preferences from database
+const preferences = await getUserPreferences(userId);
+
+// 2. Passes preferences to scheduler
+const scheduled = scheduleBlockNotifications({
+  userId,
+  blocks,
+  now,
+  upcomingWarningMinutes: 10, // fallback default
+  standupTime: preferences?.standup_time ?? null,
+  preferences, // includes notifications_enabled, notification_lead_time_minutes, etc.
+  blockTypeMeta,
+});
+
+// 3. Filters and enqueues notifications
+```
+
+**5. Testing:**
+
+Run comprehensive preference enforcement tests:
 
 ```bash
 npm run test:notifications
 ```
 
-This builds the project and runs `dist/scripts/test-notifications.js`, covering:
-- Past blocks don’t schedule
-- Upcoming blocks schedule upcoming/start
-- Paused blocks schedule resumed
-- Notifications disabled preference prevents scheduling
-- Standup schedules today/tomorrow
+The test suite (18 test cases) verifies:
+- Past blocks don't schedule notifications
+- Upcoming blocks schedule both "upcoming" and "start" notifications
+- Paused blocks schedule "resumed" notifications
+- `notifications_enabled=false` prevents ALL notifications (blocks + standup)
+- Custom `notification_lead_time_minutes` is used when set
+- Default `upcomingWarningMinutes` is used when `notification_lead_time_minutes` is null
+- Standup is scheduled when `standup_time` is present
+- Standup is NOT scheduled when `standup_time` is null
+- Edge cases: zero lead time, very large lead time, null preferences object
 
 ## Block Management Backend (Phase 4)
 

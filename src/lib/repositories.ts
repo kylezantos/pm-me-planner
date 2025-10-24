@@ -325,9 +325,51 @@ export async function getUserPreferences(
   return toResult<UserPreferences>(data, error);
 }
 
+/**
+ * Validates user preference values before saving.
+ * Throws an error if any value is invalid.
+ */
+function validateUserPreferences(values: Partial<UserPreferences>): void {
+  if (values.default_focus_minutes !== undefined && values.default_focus_minutes <= 0) {
+    throw new Error('default_focus_minutes must be greater than 0');
+  }
+  if (values.default_short_break_minutes !== undefined && values.default_short_break_minutes < 0) {
+    throw new Error('default_short_break_minutes cannot be negative');
+  }
+  if (values.default_long_break_minutes !== undefined && values.default_long_break_minutes < 0) {
+    throw new Error('default_long_break_minutes cannot be negative');
+  }
+  if (values.default_sessions_before_long_break !== undefined && values.default_sessions_before_long_break <= 0) {
+    throw new Error('default_sessions_before_long_break must be greater than 0');
+  }
+  if (values.notification_lead_time_minutes !== undefined && values.notification_lead_time_minutes !== null) {
+    if (values.notification_lead_time_minutes < 1 || values.notification_lead_time_minutes > 60) {
+      throw new Error('notification_lead_time_minutes must be between 1 and 60');
+    }
+  }
+  if (values.standup_time !== undefined && values.standup_time !== null && !/^\d{2}:\d{2}$/.test(values.standup_time)) {
+    throw new Error('standup_time must be in HH:MM format');
+  }
+  if (values.workday_start !== undefined && values.workday_start !== null && !/^\d{2}:\d{2}$/.test(values.workday_start)) {
+    throw new Error('workday_start must be in HH:MM format');
+  }
+  if (values.workday_end !== undefined && values.workday_end !== null && !/^\d{2}:\d{2}$/.test(values.workday_end)) {
+    throw new Error('workday_end must be in HH:MM format');
+  }
+}
+
 export async function upsertUserPreferences(
   values: UserPreferences
 ): Promise<Result<UserPreferences>> {
+  try {
+    validateUserPreferences(values);
+  } catch (validationError) {
+    return {
+      data: null,
+      error: validationError instanceof Error ? validationError : new Error(String(validationError))
+    };
+  }
+
   const { data, error } = await supabase
     .from('user_preferences')
     .upsert(values, { onConflict: 'user_id' })
@@ -471,6 +513,54 @@ export async function getCalendarEventById(
   return toResult<CalendarEvent>(data, error);
 }
 
+
+/**
+ * Initializes default notification preferences for a user if they don't exist.
+ * This should be called once on app start to ensure every user has sane defaults.
+ *
+ * Default values:
+ * - notifications_enabled: true
+ * - notification_sound_enabled: true
+ * - notification_lead_time_minutes: 10
+ * - standup_time: 09:00
+ * - workday_start: 08:00
+ * - workday_end: 18:00
+ * - default_focus_minutes: 25 (standard Pomodoro)
+ * - default_short_break_minutes: 5
+ * - default_long_break_minutes: 15
+ * - default_sessions_before_long_break: 4
+ *
+ * @param userId The user ID to initialize preferences for
+ * @returns The user's preferences (existing or newly created)
+ */
+export async function initializeUserPreferences(
+  userId: string
+): Promise<Result<UserPreferences>> {
+  // Check if preferences already exist
+  const existing = await getUserPreferences(userId);
+
+  if (existing.data) {
+    // Preferences already exist, return them
+    return existing;
+  }
+
+  // Create default preferences
+  const defaults: Omit<UserPreferences, 'created_at' | 'updated_at'> = {
+    user_id: userId,
+    default_focus_minutes: 25,
+    default_short_break_minutes: 5,
+    default_long_break_minutes: 15,
+    default_sessions_before_long_break: 4,
+    standup_time: '09:00',
+    workday_start: '08:00',
+    workday_end: '18:00',
+    notifications_enabled: true,
+    notification_lead_time_minutes: 10,
+    notification_sound_enabled: true,
+  };
+
+  return upsertUserPreferences(defaults as UserPreferences);
+}
 
 export type {
   BlockInstance,

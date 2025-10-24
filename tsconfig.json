@@ -22,6 +22,9 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@/*": [
+        "./src/*"
+      ],
       "@/ui/*": [
         "./src/ui/*"
       ]

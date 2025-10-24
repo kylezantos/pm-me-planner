@@ -425,3 +425,4 @@ The project uses Linear for task management with epics and issues structured to 
 - Update issue status as work progresses
 
 See `implementation-plan.md` Part 2 (Phase 1) for detailed implementation steps.
+- Remember that all of our frameworks have documentation in @docs/ -- be sure to check in there when you're not totally sure how to properly implement something or fix a bug related to that framework

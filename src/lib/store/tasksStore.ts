@@ -162,19 +162,49 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     const task = get().backlogTasks.find((t) => t.id === taskId) || get().tasks.find((t) => t.id === taskId);
     if (!task) return;
 
-    const newStatus: Task['status'] =
-      task.status === 'completed'
-        ? 'pending'
-        : task.status === 'pending'
-          ? 'in_progress'
-          : 'completed';
+    // Binary toggle: pending ↔ completed only
+    // in_progress state should be handled via explicit actions (e.g., Start Working button)
+    const newStatus: Task['status'] = task.status === 'completed' ? 'pending' : 'completed';
 
     const updates: TaskUpdate = {
       status: newStatus,
       completed_at: newStatus === 'completed' ? new Date().toISOString() : null,
     };
 
-    await get().updateTask(taskId, updates);
+    // Optimistic UI update
+    const previousState = {
+      backlogTasks: [...get().backlogTasks],
+      tasks: [...get().tasks],
+    };
+
+    // Update UI optimistically
+    set((state) => ({
+      backlogTasks: state.backlogTasks.map((t) =>
+        t.id === taskId ? { ...t, ...updates } : t
+      ),
+      tasks: state.tasks.map((t) =>
+        t.id === taskId ? { ...t, ...updates } : t
+      ),
+    }));
+
+    // Attempt database update
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) throw error;
+    } catch (error) {
+      // Rollback on error
+      set(previousState);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to toggle task status',
+      });
+      throw error; // Re-throw so TaskCheckbox can show error state
+    }
   },
 
   setTasks: (tasks: Task[]) => set({ tasks }),
