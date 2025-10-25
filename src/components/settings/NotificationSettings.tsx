@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Switch } from "@/ui/components/Switch";
-import { TextField } from "@/ui/components/TextField";
-import { Button } from "@/ui/components/Button";
-import { FeatherBell } from "@subframe/core";
+import { Switch } from "@/ui/switch";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { Button } from "@/ui/button";
+import { Bell } from "lucide-react";
 import { getUserPreferences, upsertUserPreferences } from "@/lib/repositories";
 import { sendTestNotification } from "@/lib/notifications/testing";
 import { showSuccess, showError } from "@/components/error/toastUtils";
@@ -143,7 +144,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
     return (
       <div className="flex w-full flex-col items-start gap-6">
         <div className="flex w-full items-center gap-2">
-          <FeatherBell className="text-heading-2 font-heading-2 text-brand-600" />
+          <Bell className="h-6 w-6 text-brand-600" />
           <span className="text-heading-2 font-heading-2 text-default-font">
             Notifications
           </span>
@@ -161,7 +162,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
     <div className="flex w-full flex-col items-start gap-6">
       {/* Section Header */}
       <div className="flex w-full items-center gap-2">
-        <FeatherBell className="text-heading-2 font-heading-2 text-brand-600" />
+        <Bell className="h-6 w-6 text-brand-600" />
         <span className="text-heading-2 font-heading-2 text-default-font">
           Notifications
         </span>
@@ -201,97 +202,90 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Lead Time */}
       <div className="flex w-full flex-col items-start gap-2">
-        <TextField
-          label="Lead Time (minutes)"
-          helpText="How many minutes before a block starts to show notification (1-60)"
-          variant="outline"
-        >
-          <TextField.Input
-            type="number"
-            min={1}
-            max={60}
-            value={leadTimeMinutes}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const val = e.target.value;
-              // Allow empty string for typing, will validate on save
-              if (val === "" || (!isNaN(parseInt(val, 10)) && parseInt(val, 10) >= 0)) {
-                setLeadTimeMinutes(val);
-              }
-            }}
-            placeholder="15"
-          />
-        </TextField>
+        <Label htmlFor="lead-time">Lead Time (minutes)</Label>
+        <Input
+          id="lead-time"
+          type="number"
+          min={1}
+          max={60}
+          value={leadTimeMinutes}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const val = e.target.value;
+            // Allow empty string for typing, will validate on save
+            if (val === "" || (!isNaN(parseInt(val, 10)) && parseInt(val, 10) >= 0)) {
+              setLeadTimeMinutes(val);
+            }
+          }}
+          placeholder="15"
+        />
+        <p className="text-caption font-caption text-subtext-color">
+          How many minutes before a block starts to show notification (1-60)
+        </p>
       </div>
 
       {/* Standup Time */}
       <div className="flex w-full flex-col items-start gap-2">
-        <TextField
-          label="Daily Standup Time"
-          helpText="Time for daily standup reminder (HH:MM format)"
-          variant="outline"
-        >
-          <TextField.Input
-            type="time"
-            value={standupTime}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setStandupTime(e.target.value)
-            }
-          />
-        </TextField>
+        <Label htmlFor="standup-time">Daily Standup Time</Label>
+        <Input
+          id="standup-time"
+          type="time"
+          value={standupTime}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setStandupTime(e.target.value)
+          }
+        />
+        <p className="text-caption font-caption text-subtext-color">
+          Time for daily standup reminder (HH:MM format)
+        </p>
       </div>
 
       {/* Workday Start */}
       <div className="flex w-full flex-col items-start gap-2">
-        <TextField
-          label="Workday Start"
-          helpText="When your workday typically begins (HH:MM format)"
-          variant="outline"
-        >
-          <TextField.Input
-            type="time"
-            value={workdayStart}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setWorkdayStart(e.target.value)
-            }
-          />
-        </TextField>
+        <Label htmlFor="workday-start">Workday Start</Label>
+        <Input
+          id="workday-start"
+          type="time"
+          value={workdayStart}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setWorkdayStart(e.target.value)
+          }
+        />
+        <p className="text-caption font-caption text-subtext-color">
+          When your workday typically begins (HH:MM format)
+        </p>
       </div>
 
       {/* Workday End */}
       <div className="flex w-full flex-col items-start gap-2">
-        <TextField
-          label="Workday End"
-          helpText="When your workday typically ends (HH:MM format)"
-          variant="outline"
-        >
-          <TextField.Input
-            type="time"
-            value={workdayEnd}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setWorkdayEnd(e.target.value)
-            }
-          />
-        </TextField>
+        <Label htmlFor="workday-end">Workday End</Label>
+        <Input
+          id="workday-end"
+          type="time"
+          value={workdayEnd}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setWorkdayEnd(e.target.value)
+          }
+        />
+        <p className="text-caption font-caption text-subtext-color">
+          When your workday typically ends (HH:MM format)
+        </p>
       </div>
 
       {/* Action Buttons */}
       <div className="flex w-full items-center gap-3">
         <Button
-          variant="brand-primary"
           onClick={handleSave}
-          loading={saving}
           disabled={saving}
         >
           {saving ? "Saving..." : "Save Settings"}
         </Button>
         <Button
-          variant="neutral-secondary"
-          icon={<FeatherBell />}
+          variant="secondary"
           onClick={handleSendTestNotification}
-          loading={sendingTest}
           disabled={sendingTest || !notificationsEnabled}
         >
-          Send Test Notification
+          <Bell className="mr-2 h-4 w-4" />
+          {sendingTest ? "Sending..." : "Send Test Notification"}
         </Button>
       </div>
 

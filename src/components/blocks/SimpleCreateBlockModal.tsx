@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/ui/components/Button';
-import { Select } from '@/ui/components/Select';
-import { TextArea } from '@/ui/components/TextArea';
+import { Button } from '@/ui/button';
+import { Label } from '@/ui/label';
+import { Textarea } from '@/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { showSuccess, showError } from '@/components/error/toastUtils';
 import { useBlocksStore } from '@/lib/store/blocksStore';
 import { useBlockTypesStore } from '@/lib/store/blockTypesStore';
 import { scheduleBlockInstance, type ConflictDetail } from '@/lib/blocks/scheduling';
-import { FeatherX } from '@subframe/core';
 
 interface SimpleCreateBlockModalProps {
   open: boolean;
@@ -189,46 +190,34 @@ export function SimpleCreateBlockModal({
     onOpenChange(false);
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="flex min-w-[480px] max-w-[600px] flex-col items-start gap-6 rounded-md border border-solid border-neutral-border bg-default-background shadow-lg p-6 max-h-[90vh] overflow-auto">
-        {/* Header */}
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-heading-3 font-heading-3 text-default-font">
-              Create New Block
-            </span>
-            <span className="text-caption font-caption text-subtext-color">
-              Schedule a time block for focused work
-            </span>
-          </div>
-          <button
-            onClick={handleClose}
-            className="flex items-center justify-center p-1 rounded hover:bg-neutral-100"
-            aria-label="Close"
-          >
-            <FeatherX className="h-5 w-5 text-default-font" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Block</DialogTitle>
+          <DialogDescription>
+            Schedule a time block for focused work
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
           {/* Block Type */}
-          <Select
-            label="Block Type"
-            helpText="Choose which type of work block to create"
-            placeholder="Select a block type..."
-            value={blockTypeId}
-            onValueChange={(value) => setBlockTypeId(value)}
-          >
-            {blockTypes.map((blockType) => (
-              <Select.Item key={blockType.id} value={blockType.id}>
-                {blockType.name}
-              </Select.Item>
-            ))}
-          </Select>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="blockType">Block Type</Label>
+            <Select value={blockTypeId} onValueChange={(value) => setBlockTypeId(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a block type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {blockTypes.map((blockType) => (
+                  <SelectItem key={blockType.id} value={blockType.id}>
+                    {blockType.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">Choose which type of work block to create</p>
+          </div>
 
           {/* Start Time */}
           <div className="flex flex-col gap-2">
@@ -264,17 +253,17 @@ export function SimpleCreateBlockModal({
           </div>
 
           {/* Notes */}
-          <TextArea
-            label="Notes"
-            helpText="Optional notes about this block"
-          >
-            <TextArea.Input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
               placeholder="Add any context or reminders..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
             />
-          </TextArea>
+            <p className="text-sm text-muted-foreground">Optional notes about this block</p>
+          </div>
 
           {/* Conflict Warning */}
           {showConflicts && conflicts.length > 0 && (
@@ -324,8 +313,8 @@ export function SimpleCreateBlockModal({
                     {suggestedTimes.map((time, idx) => (
                       <Button
                         key={idx}
-                        variant="neutral-secondary"
-                        size="small"
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleUseSuggestedTime(time)}
                         type="button"
                       >
@@ -341,20 +330,11 @@ export function SimpleCreateBlockModal({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex w-full items-center justify-end gap-2 pt-4">
-            <Button
-              variant="neutral-secondary"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              type="button"
-            >
-              Cancel
-            </Button>
+          <DialogFooter>
             {showConflicts && conflicts.length > 0 ? (
               <>
                 <Button
-                  variant="neutral-secondary"
+                  variant="outline"
                   onClick={() => {
                     setShowConflicts(false);
                     setConflicts([]);
@@ -365,28 +345,35 @@ export function SimpleCreateBlockModal({
                   Edit Time
                 </Button>
                 <Button
-                  variant="brand-primary"
                   onClick={(e) => handleSubmit(e, true)}
-                  loading={isSubmitting}
                   disabled={isSubmitting}
                   type="button"
                 >
-                  Create Anyway
+                  {isSubmitting ? 'Creating...' : 'Create Anyway'}
                 </Button>
               </>
             ) : (
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                Create Block
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Block'}
+                </Button>
+              </>
             )}
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

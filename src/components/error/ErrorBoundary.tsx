@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
-import { Button } from '@/ui/components/Button';
-import { FeatherAlertCircle, FeatherRefreshCw } from '@subframe/core';
+import { Button } from '@/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-8">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-error-100">
-              <FeatherAlertCircle className="h-8 w-8 text-error-600" />
+              <AlertCircle className="h-8 w-8 text-error-600" />
             </div>
             <div className="flex flex-col gap-2">
               <h2 className="text-heading-2 font-heading-2 text-default-font">
@@ -63,9 +63,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
           </div>
           <Button
-            icon={<FeatherRefreshCw />}
             onClick={this.handleReset}
           >
+            <RefreshCw className="mr-2 h-4 w-4" />
             Try again
           </Button>
         </div>

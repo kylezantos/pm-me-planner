@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Button } from '@/ui/components/Button';
-import { TextField } from '@/ui/components/TextField';
-import { Switch } from '@/ui/components/Switch';
-import { Checkbox } from '@/ui/components/Checkbox';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
+import { Switch } from '@/ui/switch';
+import { Checkbox } from '@/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { InlineError } from '@/components/error';
 import { showSuccess, showError } from '@/components/error';
 import { useBlockTypesStore } from '@/lib/store/blockTypesStore';
 import type { BlockTypeInsert } from '@/lib/types';
-import { FeatherX } from '@subframe/core';
 
 interface CreateBlockTypeModalProps {
   open: boolean;
@@ -187,51 +188,33 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
     }));
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="flex min-w-[600px] max-w-[800px] flex-col items-start gap-6 rounded-md border border-solid border-neutral-border bg-default-background shadow-lg p-6 max-h-[90vh] overflow-auto">
-        {/* Header */}
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-heading-3 font-heading-3 text-default-font">
-              Create Block Type
-            </span>
-            <span className="text-caption font-caption text-subtext-color">
-              Define a new block type template for organizing your work. This will include default settings for
-              duration, pomodoro configuration, and recurring schedule.
-            </span>
-          </div>
-          <button
-            onClick={handleClose}
-            className="flex h-8 w-8 items-center justify-center rounded hover:bg-neutral-100"
-            aria-label="Close"
-          >
-            <FeatherX className="h-5 w-5 text-default-font" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Block Type</DialogTitle>
+          <DialogDescription>
+            Define a new block type template for organizing your work. This will include default settings for
+            duration, pomodoro configuration, and recurring schedule.
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
               {/* Basic Information */}
               <div className="flex flex-col gap-4">
                 <h3 className="text-label-bold font-label-bold text-default-font">Basic Information</h3>
 
                 {/* Name */}
                 <div className="flex flex-col gap-2">
-                  <TextField
-                    label="Name"
-                    helpText="A descriptive name for this block type"
-                    error={errors.name ? true : false}
-                  >
-                    <TextField.Input
-                      placeholder="e.g., Client Work, Deep Focus, Meetings"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      autoFocus
-                    />
-                  </TextField>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g., Client Work, Deep Focus, Meetings"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    autoFocus
+                  />
+                  <p className="text-sm text-muted-foreground">A descriptive name for this block type</p>
                   {errors.name && <InlineError message={errors.name} />}
                 </div>
 
@@ -262,24 +245,21 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
 
                 {/* Default Duration */}
                 <div className="flex flex-col gap-2">
-                  <TextField
-                    label="Default Duration (minutes)"
-                    helpText="How long should blocks of this type typically last?"
-                    error={errors.default_duration_minutes ? true : false}
-                  >
-                    <TextField.Input
-                      type="number"
-                      placeholder="e.g., 120"
-                      value={formData.default_duration_minutes?.toString() || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          default_duration_minutes: parseInt(e.target.value, 10) || 0,
-                        })
-                      }
-                      min={1}
-                    />
-                  </TextField>
+                  <Label htmlFor="duration">Default Duration (minutes)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    placeholder="e.g., 120"
+                    value={formData.default_duration_minutes?.toString() || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        default_duration_minutes: parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                    min={1}
+                  />
+                  <p className="text-sm text-muted-foreground">How long should blocks of this type typically last?</p>
                   {errors.default_duration_minutes && (
                     <InlineError message={errors.default_duration_minutes} />
                   )}
@@ -293,22 +273,19 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
                 <div className="grid grid-cols-2 gap-4">
                   {/* Focus Duration */}
                   <div className="flex flex-col gap-2">
-                    <TextField
-                      label="Focus Duration (min)"
-                      error={errors.pomodoro_focus_minutes ? true : false}
-                    >
-                      <TextField.Input
-                        type="number"
-                        value={formData.pomodoro_focus_minutes?.toString() || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pomodoro_focus_minutes: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        min={1}
-                      />
-                    </TextField>
+                    <Label htmlFor="focusDuration">Focus Duration (min)</Label>
+                    <Input
+                      id="focusDuration"
+                      type="number"
+                      value={formData.pomodoro_focus_minutes?.toString() || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pomodoro_focus_minutes: parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      min={1}
+                    />
                     {errors.pomodoro_focus_minutes && (
                       <InlineError message={errors.pomodoro_focus_minutes} />
                     )}
@@ -316,22 +293,19 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
 
                   {/* Short Break */}
                   <div className="flex flex-col gap-2">
-                    <TextField
-                      label="Short Break (min)"
-                      error={errors.pomodoro_short_break_minutes ? true : false}
-                    >
-                      <TextField.Input
-                        type="number"
-                        value={formData.pomodoro_short_break_minutes?.toString() || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pomodoro_short_break_minutes: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        min={1}
-                      />
-                    </TextField>
+                    <Label htmlFor="shortBreak">Short Break (min)</Label>
+                    <Input
+                      id="shortBreak"
+                      type="number"
+                      value={formData.pomodoro_short_break_minutes?.toString() || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pomodoro_short_break_minutes: parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      min={1}
+                    />
                     {errors.pomodoro_short_break_minutes && (
                       <InlineError message={errors.pomodoro_short_break_minutes} />
                     )}
@@ -339,22 +313,19 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
 
                   {/* Long Break */}
                   <div className="flex flex-col gap-2">
-                    <TextField
-                      label="Long Break (min)"
-                      error={errors.pomodoro_long_break_minutes ? true : false}
-                    >
-                      <TextField.Input
-                        type="number"
-                        value={formData.pomodoro_long_break_minutes?.toString() || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pomodoro_long_break_minutes: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        min={1}
-                      />
-                    </TextField>
+                    <Label htmlFor="longBreak">Long Break (min)</Label>
+                    <Input
+                      id="longBreak"
+                      type="number"
+                      value={formData.pomodoro_long_break_minutes?.toString() || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pomodoro_long_break_minutes: parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      min={1}
+                    />
                     {errors.pomodoro_long_break_minutes && (
                       <InlineError message={errors.pomodoro_long_break_minutes} />
                     )}
@@ -362,22 +333,19 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
 
                   {/* Sessions Before Long Break */}
                   <div className="flex flex-col gap-2">
-                    <TextField
-                      label="Sessions Before Long Break"
-                      error={errors.pomodoro_sessions_before_long_break ? true : false}
-                    >
-                      <TextField.Input
-                        type="number"
-                        value={formData.pomodoro_sessions_before_long_break?.toString() || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pomodoro_sessions_before_long_break: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        min={1}
-                      />
-                    </TextField>
+                    <Label htmlFor="sessions">Sessions Before Long Break</Label>
+                    <Input
+                      id="sessions"
+                      type="number"
+                      value={formData.pomodoro_sessions_before_long_break?.toString() || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pomodoro_sessions_before_long_break: parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      min={1}
+                    />
                     {errors.pomodoro_sessions_before_long_break && (
                       <InlineError message={errors.pomodoro_sessions_before_long_break} />
                     )}
@@ -439,56 +407,54 @@ export function CreateBlockTypeModal({ open, onOpenChange, userId }: CreateBlock
                     </div>
 
                     {/* Auto-Create */}
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2">
                       <Checkbox
+                        id="autoCreate"
                         checked={formData.recurring_auto_create}
                         onCheckedChange={(checked) =>
                           setFormData({ ...formData, recurring_auto_create: checked as boolean })
                         }
-                        label="Automatically create blocks in advance"
                       />
+                      <Label htmlFor="autoCreate">Automatically create blocks in advance</Label>
                     </div>
 
                     {/* Weeks in Advance */}
                     <div className="flex flex-col gap-2">
-                      <TextField
-                        label="Weeks in Advance"
-                        helpText="How many weeks ahead to create recurring blocks"
-                      >
-                        <TextField.Input
-                          type="number"
-                          value={formData.recurring_weeks_in_advance?.toString() || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              recurring_weeks_in_advance: parseInt(e.target.value, 10) || 1,
-                            })
-                          }
-                          min={1}
-                          max={12}
-                        />
-                      </TextField>
+                      <Label htmlFor="weeksAhead">Weeks in Advance</Label>
+                      <Input
+                        id="weeksAhead"
+                        type="number"
+                        value={formData.recurring_weeks_in_advance?.toString() || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            recurring_weeks_in_advance: parseInt(e.target.value, 10) || 1,
+                          })
+                        }
+                        min={1}
+                        max={12}
+                      />
+                      <p className="text-sm text-muted-foreground">How many weeks ahead to create recurring blocks</p>
                     </div>
                   </>
                 )}
               </div>
 
-          {/* Actions */}
-          <div className="flex w-full items-center justify-end gap-2 pt-4">
+          <DialogFooter>
             <Button
-              variant="neutral-secondary"
+              variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
               type="button"
             >
               Cancel
             </Button>
-            <Button type="submit" loading={isSubmitting} disabled={isSubmitting}>
-              Create Block Type
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Block Type'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

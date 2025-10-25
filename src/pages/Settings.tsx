@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { IconButton } from "@/ui/components/IconButton";
-import { FeatherArrowLeft } from "@subframe/core";
+import { Button } from "@/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { Connections } from "@/components/settings/Connections";
 
@@ -17,11 +17,13 @@ export function Settings({ userId }: SettingsProps) {
       {/* Header */}
       <div className="flex w-full items-center justify-between gap-2 border-b border-solid border-neutral-border bg-default-background px-6 py-4">
         <div className="flex items-center gap-3">
-          <IconButton
-            size="small"
-            icon={<FeatherArrowLeft />}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate("/")}
-          />
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <span className="text-heading-1 font-heading-1 text-default-font">
             Settings
           </span>

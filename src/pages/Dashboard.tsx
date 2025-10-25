@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Avatar } from "@/ui/components/Avatar";
-import { Button } from "@/ui/components/Button";
-import { DropdownMenu } from "@/ui/components/DropdownMenu";
-import { IconButton } from "@/ui/components/IconButton";
-import { SidebarRailWithIcons } from "@/ui/components/SidebarRailWithIcons";
-import { TextField } from "@/ui/components/TextField";
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
 import {
-  FeatherAlarmClock,
-  FeatherArrowUp,
-  FeatherBell,
-  FeatherCalendar,
-  FeatherCheckCircle,
-  FeatherCheckSquare,
-  FeatherChevronLeft,
-  FeatherChevronRight,
-  FeatherClock,
-  FeatherHome,
-  FeatherLogOut,
-  FeatherPlayCircle,
-  FeatherPlus,
-  FeatherRefreshCw,
-  FeatherSearch,
-  FeatherSettings,
-  FeatherSlidersHorizontal,
-  FeatherTerminal,
-  FeatherToyBrick,
-} from "@subframe/core";
-import * as SubframeCore from "@subframe/core";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/ui/dropdown-menu";
+import {
+  AlarmClock,
+  ArrowUp,
+  Bell,
+  Calendar,
+  CheckCircle,
+  CheckSquare,
+  Clock,
+  Home,
+  LogOut,
+  PlayCircle,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  Terminal,
+  ToyBrick,
+} from "lucide-react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { formatDistanceToNow } from "date-fns";
 
@@ -51,8 +51,7 @@ import { InlineError } from "@/components/error/InlineError";
 import { CalendarDropZone } from "@/components/blocks/CalendarDropZone";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { showSuccess, showError } from "@/components/error/toastUtils";
-import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
-import { CalendarDayView } from "@/components/calendar/CalendarDayView";
+import { CalendarView } from "@/components/calendar/CalendarView";
 import type { BlockInstance, Task } from "@/lib/types";
 import type { BlockCalendarEvent } from "@/lib/calendar/events";
 
@@ -92,21 +91,8 @@ function Dashboard({ userId }: DashboardProps) {
     end?: Date;
   }>({});
 
-  // Week navigation state
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-    monday.setHours(0, 0, 0, 0);
-    return monday;
-  });
-
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Calendar view state (week or day)
-  const [calendarView, setCalendarView] = useState<"week" | "day">("week");
 
   // Block tasks cache (to avoid re-fetching)
   const [blockTasks, setBlockTasks] = useState<Record<string, Task[]>>({});
@@ -114,10 +100,15 @@ function Dashboard({ userId }: DashboardProps) {
   // Selected block state (for right sidebar)
   const [selectedBlock, setSelectedBlock] = useState<BlockInstance | null>(null);
 
-  // Fetch blocks when week changes
+  // Fetch blocks for current week on mount
   useEffect(() => {
-    fetchBlocksForWeek(userId, currentWeekStart);
-  }, [userId, currentWeekStart, fetchBlocksForWeek]);
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+    monday.setHours(0, 0, 0, 0);
+    fetchBlocksForWeek(userId, monday);
+  }, [userId, fetchBlocksForWeek]);
 
   // Fetch tasks for each block when blocks change
   useEffect(() => {
@@ -178,18 +169,6 @@ function Dashboard({ userId }: DashboardProps) {
     }
   };
 
-  // Handle block creation from calendar slot click
-  const handleSlotClick = (dayIndex: number, hour: number) => {
-    const slotDate = new Date(currentWeekStart);
-    slotDate.setDate(currentWeekStart.getDate() + dayIndex);
-    slotDate.setHours(hour, 0, 0, 0);
-
-    const endDate = new Date(slotDate);
-    endDate.setHours(hour + 2, 0, 0, 0); // Default 2-hour block
-
-    setBlockCreationDefaults({ start: slotDate, end: endDate });
-    setIsCreateBlockModalOpen(true);
-  };
 
   // Handle manual calendar sync
   const handleSyncNow = async () => {
@@ -205,83 +184,6 @@ function Dashboard({ userId }: DashboardProps) {
     }
   };
 
-  // Navigate weeks
-  const goToPreviousWeek = () => {
-    const newStart = new Date(currentWeekStart);
-    newStart.setDate(newStart.getDate() - 7);
-    setCurrentWeekStart(newStart);
-  };
-
-  const goToNextWeek = () => {
-    const newStart = new Date(currentWeekStart);
-    newStart.setDate(newStart.getDate() + 7);
-    setCurrentWeekStart(newStart);
-  };
-
-  const goToToday = () => {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-    monday.setHours(0, 0, 0, 0);
-    setCurrentWeekStart(monday);
-  };
-
-  // Generate week header dates
-  const weekDates = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(currentWeekStart);
-    date.setDate(currentWeekStart.getDate() + i);
-    return date;
-  });
-
-  // Format week range for display
-  const formatWeekRange = () => {
-    const start = weekDates[0];
-    const end = weekDates[6];
-    const monthStart = start.toLocaleDateString('en-US', { month: 'short' });
-    const monthEnd = end.toLocaleDateString('en-US', { month: 'short' });
-    const dayStart = start.getDate();
-    const dayEnd = end.getDate();
-    const year = end.getFullYear();
-
-    if (monthStart === monthEnd) {
-      return `${monthStart} ${dayStart} - ${dayEnd}, ${year}`;
-    }
-    return `${monthStart} ${dayStart} - ${monthEnd} ${dayEnd}, ${year}`;
-  };
-
-  // Get blocks for a specific day and hour
-  const getBlocksForSlot = (dayIndex: number, hour: number): BlockInstance[] => {
-    const slotDate = new Date(currentWeekStart);
-    slotDate.setDate(currentWeekStart.getDate() + dayIndex);
-    slotDate.setHours(hour, 0, 0, 0);
-
-    const slotEnd = new Date(slotDate);
-    slotEnd.setHours(hour + 1, 0, 0, 0);
-
-    return blocks.filter((block) => {
-      const blockStart = new Date(block.planned_start);
-      const blockEnd = new Date(block.planned_end);
-
-      // Check if block overlaps with this hour slot
-      return blockStart < slotEnd && blockEnd > slotDate;
-    });
-  };
-
-  // Determine if a given day has any blocks at all
-  const hasBlocksOnDay = (dayIndex: number): boolean => {
-    const dayStart = new Date(currentWeekStart);
-    dayStart.setDate(currentWeekStart.getDate() + dayIndex);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    return blocks.some((block) => {
-      const start = new Date(block.planned_start);
-      const end = new Date(block.planned_end);
-      return start < dayEnd && end > dayStart;
-    });
-  };
 
   // Handle calendar event selection
   const handleCalendarEventSelect = (event: BlockCalendarEvent) => {
@@ -300,81 +202,91 @@ function Dashboard({ userId }: DashboardProps) {
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex h-full w-full items-center gap-2">
-        {/* Left Sidebar */}
-        <SidebarRailWithIcons
-        header={
+      <div className="flex flex-col h-full w-full">
+        {/* Main Row: Left nav + content */}
+        <div className="flex flex-1 min-h-0 w-full items-stretch gap-2">
+          {/* Left Sidebar */}
+          <div className="flex flex-col w-16 flex-none items-center gap-2 self-stretch border-r border-solid border-neutral-border bg-default-background px-2 py-4">
+          {/* Header - Logo */}
           <div className="flex flex-col items-center justify-center gap-2 px-1 py-1">
             <img
               className="h-6 w-6 flex-none object-cover"
               src="https://res.cloudinary.com/subframe/image/upload/v1711417507/shared/y2rsnhq3mex4auk54aye.png"
             />
           </div>
-        }
-        footer={
-          <>
-            <SidebarRailWithIcons.NavItem
-              icon={<FeatherSettings />}
-              onClick={() => navigate("/settings")}
-            >
-              Settings
-            </SidebarRailWithIcons.NavItem>
-            <div className="flex flex-col items-center justify-end gap-1 px-1 py-1">
-              <SubframeCore.DropdownMenu.Root>
-                <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                  <Avatar
-                    size="small"
-                    image="https://res.cloudinary.com/subframe/image/upload/v1711417512/shared/m0kfajqpwkfief00it4v.jpg"
-                  >
-                    A
-                  </Avatar>
-                </SubframeCore.DropdownMenu.Trigger>
-                <SubframeCore.DropdownMenu.Portal>
-                  <SubframeCore.DropdownMenu.Content
-                    side="bottom"
-                    align="start"
-                    sideOffset={4}
-                    asChild={true}
-                  >
-                    <DropdownMenu>
-                      <DropdownMenu.DropdownItem
-                        icon={<FeatherSettings />}
-                        onClick={() => navigate("/settings")}
-                      >
-                        Settings
-                      </DropdownMenu.DropdownItem>
-                      <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
-                        Log out
-                      </DropdownMenu.DropdownItem>
-                    </DropdownMenu>
-                  </SubframeCore.DropdownMenu.Content>
-                </SubframeCore.DropdownMenu.Portal>
-              </SubframeCore.DropdownMenu.Root>
-            </div>
-          </>
-        }
-      >
-        <SidebarRailWithIcons.NavItem icon={<FeatherHome />} selected={true}>
-          Home
-        </SidebarRailWithIcons.NavItem>
-        <SidebarRailWithIcons.NavItem icon={<FeatherCheckSquare />}>
-          Tasks
-        </SidebarRailWithIcons.NavItem>
-        <SidebarRailWithIcons.NavItem icon={<FeatherToyBrick />}>
-          Blocks (Templates)
-        </SidebarRailWithIcons.NavItem>
-      </SidebarRailWithIcons>
 
-      {/* Main Content Area */}
-      <div className="flex flex-col grow shrink-0 basis-0 items-start self-stretch bg-neutral-50">
+          {/* Navigation */}
+          <div className="flex flex-1 flex-col items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 rounded-md bg-neutral-100"
+              title="Home"
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 rounded-md"
+              title="Tasks"
+            >
+              <CheckSquare className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 rounded-md"
+              title="Blocks (Templates)"
+            >
+              <ToyBrick className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Footer */}
+          <div className="flex flex-col items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-12 flex items-center justify-center rounded-md"
+              onClick={() => navigate("/settings")}
+              title="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center justify-center">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://res.cloudinary.com/subframe/image/upload/v1711417512/shared/m0kfajqpwkfief00it4v.jpg" />
+                    <AvatarFallback>A</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="bottom" align="start">
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex flex-col flex-1 min-h-0 items-start self-stretch bg-neutral-50">
         {/* Top Header Bar */}
         <div className="flex flex-none w-full items-center justify-between gap-2 border-b border-solid border-neutral-border bg-default-background px-6 py-4">
           <div className="flex items-center gap-2">
             <Button
-              size="small"
-              icon={<FeatherToyBrick />}
+              size="sm"
               onClick={() => setIsCreateBlockTypeModalOpen(true)}
             >
+              <ToyBrick className="mr-2 h-4 w-4" />
               New Block Type
             </Button>
           </div>
@@ -386,26 +298,29 @@ function Dashboard({ userId }: DashboardProps) {
                 </span>
               )}
               <Button
-                size="small"
-                variant="neutral-secondary"
-                icon={<FeatherRefreshCw />}
+                size="sm"
+                variant="outline"
                 disabled={connectionsCount === 0 || syncing}
-                loading={syncing}
                 onClick={handleSyncNow}
               >
+                <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
                 Sync Now
               </Button>
             </div>
-            <IconButton
-              size="small"
-              icon={<FeatherSettings />}
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => navigate("/settings")}
-            />
-            <IconButton
-              size="small"
-              icon={<FeatherBell />}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            />
+            >
+              <Bell className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -418,27 +333,25 @@ function Dashboard({ userId }: DashboardProps) {
                   Task Backlog
                 </span>
               </div>
-              <div className="flex w-full items-center">
-                <TextField
-                  className="h-auto grow shrink-0 basis-0"
-                  variant="filled"
-                  label=""
-                  helpText=""
-                  icon={<FeatherSearch />}
-                >
-                  <TextField.Input
+              <div className="flex w-full items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
                     placeholder="Search tasks..."
                     value={searchQuery}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                       setSearchQuery(event.target.value)
                     }
+                    className="pl-9"
                   />
-                </TextField>
-                <IconButton
-                  size="small"
-                  icon={<FeatherSlidersHorizontal />}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                />
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
@@ -449,7 +362,7 @@ function Dashboard({ userId }: DashboardProps) {
                 <div className="flex w-full flex-col items-start gap-2">
                   <InlineError message={backlogError} />
                   <Button
-                    size="small"
+                    size="sm"
                     onClick={() => fetchBacklogTasks(userId)}
                   >
                     Retry
@@ -477,85 +390,22 @@ function Dashboard({ userId }: DashboardProps) {
 
             {/* Add Task Button */}
             <Button
-              className="h-8 w-full flex-none"
-              icon={<FeatherPlus />}
+              className="w-full flex-none"
+              size="sm"
               onClick={() => setIsCreateTaskModalOpen(true)}
             >
+              <Plus className="mr-2 h-4 w-4" />
               Add Task
             </Button>
           </div>
 
           {/* Calendar View */}
-          <div className="flex flex-1 flex-col items-start self-stretch overflow-hidden">
-            <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border bg-default-background px-6 py-3">
-              <div className="flex items-center gap-2">
-                <IconButton
-                  size="small"
-                  icon={<FeatherChevronLeft />}
-                  onClick={goToPreviousWeek}
-                />
-                <span className="text-body-bold font-body-bold text-default-font">
-                  {formatWeekRange()}
-                </span>
-                <IconButton
-                  size="small"
-                  icon={<FeatherChevronRight />}
-                  onClick={goToNextWeek}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 border border-solid border-neutral-border rounded-md overflow-hidden">
-                  <button
-                    onClick={() => setCalendarView("week")}
-                    className={`px-3 py-1 text-caption font-caption transition-colors ${
-                      calendarView === "week"
-                        ? "bg-brand-600 text-white"
-                        : "bg-default-background text-subtext-color hover:bg-neutral-100"
-                    }`}
-                  >
-                    Week
-                  </button>
-                  <button
-                    onClick={() => setCalendarView("day")}
-                    className={`px-3 py-1 text-caption font-caption transition-colors ${
-                      calendarView === "day"
-                        ? "bg-brand-600 text-white"
-                        : "bg-default-background text-subtext-color hover:bg-neutral-100"
-                    }`}
-                  >
-                    Day
-                  </button>
-                </div>
-                <Button
-                  variant="brand-secondary"
-                  size="small"
-                  onClick={goToToday}
-                >
-                  Today
-                </Button>
-              </div>
-            </div>
-
-            {/* New Calendar Views */}
-            <div className="flex flex-1 w-full items-stretch p-4 overflow-hidden">
-              {calendarView === "week" ? (
-                <CalendarWeekView
-                  userId={userId}
-                  initialDate={currentWeekStart}
-                  onSelectEvent={handleCalendarEventSelect}
-                  onSelectSlot={handleCalendarSlotSelect}
-                  height="100%"
-                />
-              ) : (
-                <CalendarDayView
-                  userId={userId}
-                  initialDate={currentWeekStart}
-                  onSelectEvent={handleCalendarEventSelect}
-                  onSelectSlot={handleCalendarSlotSelect}
-                  height="100%"
-                />
-              )}
-            </div>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <CalendarView
+              userId={userId}
+              onSelectEvent={handleCalendarEventSelect}
+              onSelectSlot={handleCalendarSlotSelect}
+            />
           </div>
 
           {/* Right Sidebar - Block Details */}
@@ -589,15 +439,16 @@ function Dashboard({ userId }: DashboardProps) {
                       })}
                     </span>
                   </div>
-                  <IconButton
-                    size="small"
-                    variant="neutral-tertiary"
-                    icon={<FeatherSettings />}
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     onClick={() => {
                       // TODO: Open edit modal
                       console.log('Edit block', selectedBlock);
                     }}
-                  />
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
                 </div>
 
                 {/* Block Status */}
@@ -676,82 +527,81 @@ function Dashboard({ userId }: DashboardProps) {
                 </div>
               </div>
             )}
-          </div>
         </div>
-
-        {/* Bottom Claude Input Bar */}
-        <div className="flex flex-none w-full items-center justify-center gap-3 border-t border-solid border-neutral-border bg-default-background px-36 py-3">
-          <IconButton
-            size="small"
-            icon={<FeatherTerminal />}
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-          />
-          <TextField
-            className="h-auto grow shrink-0 basis-0"
-            variant="filled"
-            label=""
-            helpText=""
-          >
-            <TextField.Input
-              placeholder="Ask Claude..."
-              value=""
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
-            />
-          </TextField>
-          <IconButton
-            size="small"
-            icon={<FeatherClock />}
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-          />
-          <IconButton
-            variant="brand-primary"
-            size="small"
-            icon={<FeatherArrowUp />}
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-          />
-        </div>
-
-        {/* Status Bar */}
-        <div className="flex flex-none w-full items-start border-t border-solid border-neutral-border bg-default-background">
-          <div className="flex grow shrink-0 basis-0 items-center justify-between px-6 py-3">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <FeatherPlayCircle className="text-body font-body text-brand-600" />
-                <span className="text-body-bold font-body-bold text-default-font">
-                  No active task
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <FeatherCheckCircle className="text-body font-body text-success-600" />
-                <span className="text-caption font-caption text-subtext-color">
-                  AI Accountability: Ready
-                </span>
-              </div>
-              <div className="flex h-6 w-px flex-none flex-col items-center gap-2 bg-neutral-border" />
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <span className="text-caption-bold font-caption-bold text-default-font">
-                    {backlogTasks.filter((t) => t.status === "completed").length}
-                  </span>
-                  <span className="text-caption font-caption text-subtext-color">
-                    tasks completed
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-caption-bold font-caption-bold text-default-font">
-                    0h
-                  </span>
-                  <span className="text-caption font-caption text-subtext-color">
-                    tracked today
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
+    </div>
+
+    {/* Bottom Claude Input Bar */}
+    <div className="flex flex-none w-full items-center justify-center gap-3 border-t border-solid border-neutral-border bg-default-background px-36 py-3">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+        >
+          <Terminal className="h-4 w-4" />
+        </Button>
+        <Input
+          placeholder="Ask Claude..."
+          value=""
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
+          className="flex-1"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+        >
+          <Clock className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+        >
+          <ArrowUp className="h-4 w-4" />
+        </Button>
+    </div>
+
+    {/* Status Bar */}
+    <div className="flex flex-none w-full items-start border-t border-solid border-neutral-border bg-default-background">
+        <div className="flex grow shrink-0 basis-0 items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 text-brand-600" />
+              <span className="text-body-bold font-body-bold text-default-font">
+                No active task
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success-600" />
+              <span className="text-caption font-caption text-subtext-color">
+                AI Accountability: Ready
+              </span>
+            </div>
+            <div className="flex h-6 w-px flex-none flex-col items-center gap-2 bg-neutral-border" />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <span className="text-caption-bold font-caption-bold text-default-font">
+                  {backlogTasks.filter((t) => t.status === "completed").length}
+                </span>
+                <span className="text-caption font-caption text-subtext-color">
+                  tasks completed
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-caption-bold font-caption-bold text-default-font">
+                  0h
+                </span>
+                <span className="text-caption font-caption text-subtext-color">
+                  tracked today
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
 
       {/* Create Task Modal */}
       <SimpleCreateTaskModal

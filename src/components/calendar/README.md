@@ -1,76 +1,48 @@
 # Calendar Components
 
-This directory contains the react-big-calendar integration for PM Me Planner.
+This directory contains the custom calendar implementation for PM Me Planner (no react-big-calendar).
 
 ## Components
 
 ### CalendarView
-The main calendar component configured with date-fns localizer.
+The top-level calendar container that renders the active view and navigation.
 
 **Features:**
-- date-fns v4.1.0 localizer integration
-- Automatic local timezone handling
-- Configurable views (month, week, work_week, day, agenda)
-- Event selection handling
-- Slot selection for creating new events
+- Month, Week, and Day views (`CalendarMonthView`, `CalendarWeekView`, `CalendarDayView`)
+- View selector (`ViewSelector`) using shadcn/ui ToggleGroup
+- Next/Previous/Today navigation
+- Event selection and slot selection callbacks
 - Fully typed with TypeScript
 
 **Usage:**
 ```tsx
-import { CalendarView, CalendarEvent } from '@/components/calendar';
-
-const events: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Meeting',
-    start: new Date(2025, 9, 20, 10, 0),
-    end: new Date(2025, 9, 20, 11, 0),
-  },
-];
+import { CalendarView } from '@/components/calendar';
 
 <CalendarView
-  events={events}
+  userId={userId}
   onSelectEvent={(event) => console.log(event)}
   onSelectSlot={(slot) => console.log(slot)}
-  defaultView="week"
-  height={600}
-/>
+/>;
 ```
 
-### CalendarDemo
-A demonstration component showing react-big-calendar with sample data.
+### Views
+- `CalendarMonthView` — Month grid with block counts and quick creation.
+- `CalendarWeekView` — Week time-grid starting Monday (configurable).
+- `CalendarDayView` — Single-day time-grid.
 
-**Test it:**
-Navigate to `/calendar-test` to see the demo in action.
-
-## Dependencies
-
-- `react-big-calendar` v1.19.4
-- `date-fns` v4.1.0 (already installed)
-
-## Configuration
-
-The calendar is configured to:
-- Use en-US locale by default
-- Respect the user's local timezone automatically
-- Display week view by default
-- Allow event and slot selection
+### Utilities
+- `@/lib/calendar/utils` — helpers like `getMondayOfWeek`, `formatWeekRange`, etc.
+- `date-fns` — for all date math/formatting.
 
 ## Styling
+- Tailwind CSS v4 utility classes with OKLCH color tokens (see `src/app/globals.css`).
+- shadcn/ui primitives for controls (buttons, toggles, tooltips).
+- Icons via `lucide-react`.
 
-The calendar includes the default react-big-calendar CSS:
-```tsx
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-```
+## Integration
+The calendar is used to:
+- Display and interact with Block instances
+- Create blocks via slot selection or DnD from backlog
+- Respect Google Calendar events (read-only cache in MVP)
 
-Additional custom styling can be added via Tailwind classes or CSS modules as needed.
-
-## Integration with PM Me Planner
-
-This calendar will be used to:
-- Display block instances on the calendar
-- Allow drag-and-drop of tasks to calendar blocks
-- Support creating new blocks by clicking on time slots
-- Sync with Google Calendar events (read-only in MVP)
-
-See `PRD.md` and `implementation-plan.md` for full details on calendar integration requirements.
+See `PRD.md` and `implementation-plan.md` for full details.

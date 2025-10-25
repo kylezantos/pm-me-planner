@@ -1,13 +1,23 @@
 import React from 'react';
-import { Loader } from '@/ui/components/Loader';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';
   className?: string;
 }
 
+const sizeMap = {
+  small: 'h-4 w-4',
+  medium: 'h-6 w-6',
+  large: 'h-8 w-8',
+};
+
 export function Spinner({ size = 'medium', className }: SpinnerProps) {
   return (
-    <Loader size={size} className={className} aria-label="Loading..." />
+    <Loader2
+      className={cn('animate-spin', sizeMap[size], className)}
+      aria-label="Loading..."
+    />
   );
 }

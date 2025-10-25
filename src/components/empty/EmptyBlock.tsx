@@ -1,11 +1,11 @@
 import React from 'react';
-import { FeatherInbox } from '@subframe/core';
+import { Inbox } from 'lucide-react';
 
 export function EmptyBlock() {
   return (
     <div className="flex w-full flex-col items-center justify-center gap-3 py-8 px-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-        <FeatherInbox className="h-6 w-6 text-neutral-400" />
+        <Inbox className="h-6 w-6 text-neutral-400" />
       </div>
       <div className="flex flex-col items-center gap-1 text-center">
         <span className="text-caption-bold font-caption-bold text-default-font">

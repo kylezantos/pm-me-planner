@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { IconWithBackground } from '@/ui/components/IconWithBackground';
+import { Badge } from '@/ui/badge';
 import {
-  FeatherChevronDown,
-  FeatherChevronRight,
-  FeatherClock,
-  FeatherAlertCircle,
-  FeatherTag,
-} from '@subframe/core';
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
 import { TaskCheckbox } from './TaskCheckbox';
 import type { Task } from '@/lib/types';
 
@@ -33,13 +32,26 @@ export function TaskCard({
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'error' as const;
+        return 'destructive' as const;
       case 'medium':
-        return 'warning' as const;
+        return 'default' as const;
       case 'low':
-        return 'success' as const;
+        return 'secondary' as const;
       default:
-        return 'neutral' as const;
+        return 'outline' as const;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'text-red-500';
+      case 'medium':
+        return 'text-yellow-500';
+      case 'low':
+        return 'text-green-500';
+      default:
+        return 'text-gray-500';
     }
   };
 
@@ -77,9 +89,9 @@ export function TaskCard({
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
             >
               {isExpanded ? (
-                <FeatherChevronDown className="text-body font-body text-default-font" />
+                <ChevronDown className="h-4 w-4 text-default-font" />
               ) : (
-                <FeatherChevronRight className="text-body font-body text-default-font" />
+                <ChevronRight className="h-4 w-4 text-default-font" />
               )}
             </button>
           )}
@@ -97,16 +109,15 @@ export function TaskCard({
         </div>
 
         {/* Priority indicator */}
-        <IconWithBackground
-          variant={getPriorityVariant(task.priority)}
-          icon={<FeatherAlertCircle />}
-        />
+        <div className="flex items-center">
+          <AlertCircle className={`h-5 w-5 ${getPriorityColor(task.priority)}`} />
+        </div>
       </div>
 
       {/* Time estimate */}
       {task.estimated_duration_minutes && (
         <div className="flex w-full items-center gap-2 px-3 pb-3">
-          <FeatherClock className="text-caption font-caption text-subtext-color" />
+          <Clock className="h-4 w-4 text-subtext-color" />
           <span className="text-caption font-caption text-subtext-color">
             {task.estimated_duration_minutes} mins
           </span>

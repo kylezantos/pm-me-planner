@@ -10,7 +10,6 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import { CalendarSyncProvider } from "./lib/google";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
-import CalendarTest from "./pages/CalendarTest";
 import OAuthCallback from "./pages/OAuthCallback";
 
 // Hardcoded test user ID for development
@@ -79,7 +78,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard userId={TEST_USER_ID} />} />
             <Route path="/settings" element={<Settings userId={TEST_USER_ID} />} />
-            <Route path="/calendar-test" element={<CalendarTest />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

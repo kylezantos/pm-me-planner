@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FeatherCheckCircle, FeatherAlertCircle, FeatherLoader } from "@subframe/core";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import {
   readPkceVerifier,
   readOAuthState,
@@ -216,13 +216,13 @@ export function OAuthCallback() {
         {/* Icon */}
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50">
           {result.status === "processing" && (
-            <FeatherLoader className="h-8 w-8 animate-spin text-brand-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
           )}
           {result.status === "success" && (
-            <FeatherCheckCircle className="h-8 w-8 text-success-600" />
+            <CheckCircle className="h-8 w-8 text-success-600" />
           )}
           {result.status === "error" && (
-            <FeatherAlertCircle className="h-8 w-8 text-error-600" />
+            <AlertCircle className="h-8 w-8 text-error-600" />
           )}
         </div>
 

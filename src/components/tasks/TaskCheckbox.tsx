@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Checkbox } from '@/ui/components/Checkbox';
-import { Loader } from '@/ui/components/Loader';
+import { Checkbox } from '@/ui/checkbox';
+import { Loader2 } from 'lucide-react';
 import type { TaskStatus } from '@/lib/types';
 
 interface TaskCheckboxProps {
@@ -27,7 +27,7 @@ export function TaskCheckbox({ taskId, status, onToggle, className = '' }: TaskC
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center ${className}`}>
-        <Loader size="small" />
+        <Loader2 className="h-4 w-4 animate-spin" />
       </div>
     );
   }
@@ -36,7 +36,6 @@ export function TaskCheckbox({ taskId, status, onToggle, className = '' }: TaskC
     <Checkbox
       checked={status === 'completed'}
       onCheckedChange={handleChange}
-      label=""
       className={className}
       aria-label={status === 'completed' ? 'Mark as incomplete' : 'Mark as complete'}
     />

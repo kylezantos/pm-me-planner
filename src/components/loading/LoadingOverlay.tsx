@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader } from '@/ui/components/Loader';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingOverlayProps {
   message?: string;
@@ -21,7 +21,7 @@ export function LoadingOverlay({
         <div className="absolute inset-0 bg-default-background/80 backdrop-blur-sm" />
       )}
       <div className="relative z-10 flex flex-col items-center gap-4">
-        <Loader size="large" />
+        <Loader2 className="h-8 w-8 animate-spin" />
         {message && (
           <span className="text-body font-body text-default-font">
             {message}

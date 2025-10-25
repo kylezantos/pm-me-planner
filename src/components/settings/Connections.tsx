@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "@/ui/components/Button";
-import { FeatherCheckCircle, FeatherAlertCircle, FeatherCalendar } from "@subframe/core";
-import * as SubframeCore from "@subframe/core";
-import { Tooltip } from "@/ui/components/Tooltip";
+import { Button } from "@/ui/button";
+import { CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/ui/tooltip";
 import { listCalendarConnections } from "@/lib/repositories";
 import type { CalendarConnection } from "@/lib/types";
 import { createPkcePair, generateAuthUrl } from "@/lib/google/auth";
@@ -109,7 +108,7 @@ export function Connections({ userId }: ConnectionsProps) {
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50">
-              <FeatherCalendar className="h-5 w-5 text-brand-600" />
+              <Calendar className="h-5 w-5 text-brand-600" />
             </div>
             <div className="flex flex-col items-start gap-1">
               <span className="text-body-bold font-body-bold text-default-font">
@@ -121,14 +120,14 @@ export function Connections({ userId }: ConnectionsProps) {
                 </span>
               ) : googleConnection ? (
                 <div className="flex items-center gap-2">
-                  <FeatherCheckCircle className="h-4 w-4 text-success-600" />
+                  <CheckCircle className="h-4 w-4 text-success-600" />
                   <span className="text-caption font-caption text-success-700">
                     Connected as {googleConnection.account_email}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <FeatherAlertCircle className="h-4 w-4 text-neutral-400" />
+                  <AlertCircle className="h-4 w-4 text-neutral-400" />
                   <span className="text-caption font-caption text-subtext-color">
                     Not connected
                   </span>
@@ -139,8 +138,6 @@ export function Connections({ userId }: ConnectionsProps) {
 
           {!googleConnection && (
             <Button
-              variant="brand-primary"
-              size="medium"
               onClick={handleConnectGoogle}
               disabled={connecting || loading}
             >
@@ -151,36 +148,29 @@ export function Connections({ userId }: ConnectionsProps) {
           {googleConnection && (
             <div className="flex items-center gap-2">
               <Button
-                variant="neutral-secondary"
-                size="small"
+                variant="secondary"
+                size="sm"
                 onClick={loadConnections}
                 disabled={loading}
               >
                 Refresh
               </Button>
-              <SubframeCore.Tooltip.Provider>
-                <SubframeCore.Tooltip.Root>
-                  <SubframeCore.Tooltip.Trigger asChild={true}>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
-                      variant="destructive-secondary"
-                      size="small"
+                      variant="destructive"
+                      size="sm"
                       disabled={true}
                     >
                       Disconnect
                     </Button>
-                  </SubframeCore.Tooltip.Trigger>
-                  <SubframeCore.Tooltip.Portal>
-                    <SubframeCore.Tooltip.Content
-                      side="bottom"
-                      align="center"
-                      sideOffset={8}
-                      asChild={true}
-                    >
-                      <Tooltip>Coming soon</Tooltip>
-                    </SubframeCore.Tooltip.Content>
-                  </SubframeCore.Tooltip.Portal>
-                </SubframeCore.Tooltip.Root>
-              </SubframeCore.Tooltip.Provider>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Coming soon</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>
@@ -234,7 +224,7 @@ export function Connections({ userId }: ConnectionsProps) {
 
       <div className="flex w-full flex-col items-start gap-2 rounded-lg border border-solid border-neutral-border bg-neutral-50 p-4">
         <div className="flex items-start gap-2">
-          <FeatherAlertCircle className="h-5 w-5 flex-none text-subtext-color" />
+          <AlertCircle className="h-5 w-5 flex-none text-subtext-color" />
           <div className="flex flex-col items-start gap-1">
             <span className="text-caption-bold font-caption-bold text-default-font">
               Read-only Access

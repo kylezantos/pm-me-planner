@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '@/ui/components/Button';
-import { FeatherPlus, FeatherCheckSquare } from '@subframe/core';
+import { Button } from '@/ui/button';
+import { Plus, CheckSquare } from 'lucide-react';
 
 interface EmptyBacklogProps {
   onCreateTask?: () => void;
@@ -10,7 +10,7 @@ export function EmptyBacklog({ onCreateTask }: EmptyBacklogProps) {
   return (
     <div className="flex w-full flex-col items-center justify-center gap-4 py-12 px-6">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-        <FeatherCheckSquare className="h-8 w-8 text-neutral-400" />
+        <CheckSquare className="h-8 w-8 text-neutral-400" />
       </div>
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="text-body-bold font-body-bold text-default-font">
@@ -23,10 +23,10 @@ export function EmptyBacklog({ onCreateTask }: EmptyBacklogProps) {
       </div>
       {onCreateTask && (
         <Button
-          size="small"
-          icon={<FeatherPlus />}
+          size="sm"
           onClick={onCreateTask}
         >
+          <Plus className="mr-2 h-4 w-4" />
           Create Task
         </Button>
       )}

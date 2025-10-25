@@ -1,5 +1,5 @@
 import React from 'react';
-import { FeatherCalendar } from '@subframe/core';
+import { Calendar } from 'lucide-react';
 
 interface EmptyCalendarProps {
   /** Optional message override */
@@ -10,7 +10,7 @@ export function EmptyCalendar({ message }: EmptyCalendarProps) {
   return (
     <div className="flex w-full flex-col items-center justify-center gap-4 py-12 px-6">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-        <FeatherCalendar className="h-8 w-8 text-neutral-400" />
+        <Calendar className="h-8 w-8 text-neutral-400" />
       </div>
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="text-body-bold font-body-bold text-default-font">
