@@ -295,9 +295,9 @@ This project uses [shadcn/ui](https://ui.shadcn.com/) as the primary component l
 
 ## Before Implementation - Required Documentation Review
 
-**CRITICAL: All agents MUST reference the framework documentation in `docs/` before implementing any integration code or configuration.**
+**CRITICAL: All agents MUST reference the framework documentation in `docs/frameworks/` before implementing any integration code or configuration.**
 
-The `docs/` directory contains comprehensive reference material extracted from official documentation. Agents working on scaffolding, setup, or feature implementation should consult the relevant documentation files BEFORE writing code to ensure:
+The `docs/frameworks/` directory contains comprehensive reference material extracted from official documentation. Agents working on scaffolding, setup, or feature implementation should consult the relevant documentation files BEFORE writing code to ensure:
 - Configuration files follow framework best practices and latest API conventions
 - Integration patterns match current framework recommendations
 - All required dependencies and setup steps are included
@@ -306,25 +306,25 @@ The `docs/` directory contains comprehensive reference material extracted from o
 **Required Reading by Phase:**
 
 **Phase 1 (Foundation & Project Setup):**
-- `docs/tauri.md` - MUST read before creating `tauri.conf.json`, `Cargo.toml`, or any Rust backend code
-- `docs/supabase-js.md` - MUST read before implementing database client initialization
+- `docs/frameworks/tauri.md` - MUST read before creating `tauri.conf.json`, `Cargo.toml`, or any Rust backend code
+- `docs/frameworks/supabase-js.md` - MUST read before implementing database client initialization
 
 **Phase 2-5 (Core Features):**
-- `docs/supabase-js.md` - Reference for all database queries, RLS policies, and real-time subscriptions
-- `docs/tauri-plugins.md` - Consult before adding notification, shell, dialog, or filesystem integrations
+- `docs/frameworks/supabase-js.md` - Reference for all database queries, RLS policies, and real-time subscriptions
+- `docs/frameworks/tauri-plugins.md` - Consult before adding notification, shell, dialog, or filesystem integrations
 
 **Phase 6 (Google Calendar Integration):**
-- `docs/google-calendar-api.md` - MUST read before implementing OAuth flow or calendar sync logic
+- `docs/frameworks/google-calendar-api.md` - MUST read before implementing OAuth flow or calendar sync logic
 
 **Phase 7 (macOS Notifications):**
-- `docs/tauri-plugins.md` - Reference the notification plugin section
+- `docs/frameworks/tauri-plugins.md` - Reference the notification plugin section
 
 **Phase 8 (Embedded Terminal):**
-- `docs/xterm-js.md` - MUST read before implementing terminal embedding
-- `docs/tauri-plugins.md` - Reference the shell plugin section
+- `docs/frameworks/xterm-js.md` - MUST read before implementing terminal embedding
+- `docs/frameworks/tauri-plugins.md` - Reference the shell plugin section
 
 **Documentation Precedence:**
-When conflicts arise between implementation-plan.md suggestions and official framework docs in `docs/`, the official documentation in `docs/` takes precedence. The implementation plan provides high-level guidance, but specific API usage, configuration syntax, and best practices should follow the framework documentation.
+When conflicts arise between docs/reference/implementation-plan.md suggestions and official framework docs in `docs/frameworks/`, the official documentation in `docs/frameworks/` takes precedence. The implementation plan provides high-level guidance, but specific API usage, configuration syntax, and best practices should follow the framework documentation.
 
 ## Development Commands
 
@@ -429,7 +429,7 @@ if (missing.length > 0) {
 
 ## Implementation Phases
 
-The project is planned in 11 phases (see `implementation-plan.md` for details):
+The project is planned in 11 phases (see `docs/reference/implementation-plan.md` for step-by-step details and `PRD.md` for feature descriptions):
 
 1. **Phase 1** - Foundation & Project Setup ← **CURRENT PHASE**
 2. **Phase 2** - Database Schema & Models
@@ -449,6 +449,8 @@ The project is planned in 11 phases (see `implementation-plan.md` for details):
 - Linear epics and issues created for task tracking and parallel agent execution
 
 **Estimated Timeline:** 6-11 days with parallel Claude Code/Codex agents
+
+**UI Component Roadmap:** See `docs/reference/ui-component-roadmap.md` for a living document tracking missing UI components and states to be implemented across phases 2-10.
 
 ## AI Integration Architecture
 
@@ -843,15 +845,28 @@ const calendar = google.calendar({ version: 'v3', auth });
 
 ## Related Documentation
 
+**Root-Level Documentation:**
 - **PRD.md** - Full product requirements
-- **implementation-plan.md** - Detailed phase-by-phase plan with setup instructions
+- **README.md** - Project overview and quick start
+- **CLAUDE.md / AGENTS.md** - Agent guidance (this file)
+
+**Reference Documentation (`docs/reference/`):**
+- **implementation-plan.md** - Detailed 11-phase development roadmap with setup instructions
+- **DATABASE_SCHEMA.md** - Database schema design and models
 - **SECURITY_AND_PORTABILITY.md** - Credential management and multi-user scenarios
-- **docs/** - Framework reference documentation
-  - `tauri.md` - Tauri framework guide
-  - `tauri-plugins.md` - Notification, shell, dialog, filesystem plugins
-  - `supabase-js.md` - Database client API
-  - `xterm-js.md` - Terminal library reference
-  - `google-calendar-api.md` - Calendar API v3 reference
+- **ui-component-roadmap.md** - Living document tracking UI components to implement
+
+**Framework Documentation (`docs/frameworks/`):**
+- **tauri.md** - Tauri framework guide
+- **tauri-plugins.md** - Notification, shell, dialog, filesystem plugins
+- **supabase-js.md** - Database client API
+- **google-calendar-api.md** - Calendar API v3 reference
+- **xterm-js.md** - Terminal library reference
+- **dnd-kit.md** - Drag and drop library
+- **date-fns.md** - Date manipulation utilities
+- **zustand.md** - State management
+- **react-router.md** - Client-side routing
+- **sonner.md** - Toast notifications
 
 ## MCP Server Configuration
 
@@ -891,4 +906,6 @@ The project uses Linear for task management with epics and issues structured to 
 - Multiple agents can work in parallel on independent issues
 - Update issue status as work progresses
 
-See `implementation-plan.md` Part 2 (Phase 1) for detailed implementation steps.
+See `docs/reference/implementation-plan.md` Part 2 (Phase 1) for detailed implementation steps.
+
+**Important:** All frameworks have documentation in `docs/frameworks/` -- always check there when implementing features or fixing bugs related to a specific framework.

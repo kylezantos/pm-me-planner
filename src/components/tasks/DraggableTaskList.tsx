@@ -24,6 +24,8 @@ interface DraggableTaskListProps {
   onToggleStatus: (taskId: string) => Promise<void>;
   onReorder?: (activeId: string, overId: string) => void;
   expandable?: boolean;
+  onEdit?: (task: Task) => void;
+  onDelete?: (taskId: string) => void;
 }
 
 export function DraggableTaskList({
@@ -31,6 +33,8 @@ export function DraggableTaskList({
   onToggleStatus,
   onReorder,
   expandable = false,
+  onEdit,
+  onDelete,
 }: DraggableTaskListProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
@@ -81,6 +85,8 @@ export function DraggableTaskList({
               task={task}
               onToggleStatus={onToggleStatus}
               expandable={expandable}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>

@@ -16,6 +16,7 @@ const GRID_CONFIG = {
   SLOT_HEIGHT: 80, // px per hour
   TIME_COL_WIDTH: 80, // px
 } as const;
+const COLUMN_INSET = 2; // px inset used for events and indicator within day columns
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function CalendarWeekView({
@@ -39,10 +40,6 @@ export function CalendarWeekView({
   }, []);
 
   const currentHour = currentTime.getHours() + currentTime.getMinutes() / 60;
-
-  // Get day index (0-6 for Mon-Sun)
-  const currentDayOfWeek = currentTime.getDay();
-  const adjustedDay = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Adjust to Mon=0, Sun=6
 
   // Generate week dates (Mon-Sun)
   const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -119,7 +116,7 @@ export function CalendarWeekView({
   }
 
   return (
-    <div className={`flex-1 overflow-auto bg-white ${className}`}>
+    <div className={`h-full w-full overflow-auto bg-white ${className}`}>
       <div className="min-w-[900px]">
         {/* Day Headers */}
         <div
@@ -180,7 +177,7 @@ export function CalendarWeekView({
           ))}
 
           {/* Events Layer */}
-          {Object.entries(eventsByDay).map(([dayIndex, dayEvents]) =>
+  {Object.entries(eventsByDay).map(([dayIndex, dayEvents]) =>
             dayEvents.map((event, eventIndex) => (
               <div
                 key={`${dayIndex}-${eventIndex}`}
@@ -203,25 +200,44 @@ export function CalendarWeekView({
             ))
           )}
 
-          {/* Current Time Indicator */}
-          {currentHour >= GRID_CONFIG.HOURS[0] &&
-            currentHour <= GRID_CONFIG.HOURS[GRID_CONFIG.HOURS.length - 1] + 1 &&
-            adjustedDay >= 0 &&
-            adjustedDay < 7 && (
+          {/* Current Time Indicator (grid-aligned) */}
+          {(() => {
+            // Determine if today falls within the visible week and compute its column
+            const todayIndex = weekDates.findIndex((d) => isSameDay(d, currentTime));
+            const withinHours =
+              currentHour >= GRID_CONFIG.HOURS[0] &&
+              currentHour <= GRID_CONFIG.HOURS[GRID_CONFIG.HOURS.length - 1] + 1;
+            if (todayIndex === -1 || !withinHours) return null;
+
+            return (
               <div
-                className="absolute z-20 pointer-events-none"
+                className="absolute inset-0 z-20 pointer-events-none"
                 style={{
-                  left: `calc(${GRID_CONFIG.TIME_COL_WIDTH}px + ${adjustedDay * (100 / 7)}%)`,
-                  top: `${(currentHour - GRID_CONFIG.HOURS[0]) * GRID_CONFIG.SLOT_HEIGHT}px`,
-                  width: `calc(${100 / 7}%)`,
+                  display: 'grid',
+                  gridTemplateColumns: `${GRID_CONFIG.TIME_COL_WIDTH}px repeat(7, 1fr)`,
                 }}
               >
-                <div className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-blue-600 shadow-lg" />
-                  <div className="flex-1 h-0.5 bg-blue-600 shadow-sm" />
+                <div
+                  className="relative"
+                  style={{ gridColumn: todayIndex + 2 }}
+                >
+                  <div
+                    className="absolute"
+                    style={{
+                      left: `${COLUMN_INSET}px`,
+                      right: `${COLUMN_INSET}px`,
+                      top: `${(currentHour - GRID_CONFIG.HOURS[0]) * GRID_CONFIG.SLOT_HEIGHT}px`,
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600 shadow-lg" />
+                      <div className="flex-1 h-0.5 bg-blue-600 shadow-sm" />
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+            );
+          })()}
 
           {/* Loading Overlay */}
           {loading && (

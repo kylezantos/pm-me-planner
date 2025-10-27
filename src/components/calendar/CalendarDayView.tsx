@@ -100,7 +100,7 @@ export function CalendarDayView({
   }
 
   return (
-    <div className={`flex-1 overflow-auto bg-white ${className}`}>
+    <div className={`h-full w-full overflow-auto bg-white ${className}`}>
       <div className="min-w-[600px]">
         {/* Day Header */}
         <div

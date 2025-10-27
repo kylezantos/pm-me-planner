@@ -14,7 +14,8 @@
       {
         "title": "pm-me-planner",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "devtools": true
       }
     ],
     "security": {

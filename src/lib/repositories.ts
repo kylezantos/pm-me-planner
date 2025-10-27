@@ -315,14 +315,14 @@ export async function listCalendarEvents(
 
 export async function getUserPreferences(
   userId: string
-): Promise<Result<UserPreferences>> {
+): Promise<Result<UserPreferences | null>> {
   const { data, error } = await supabase
     .from('user_preferences')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
-  return toResult<UserPreferences>(data, error);
+  return toResult<UserPreferences | null>(data, error);
 }
 
 /**
@@ -541,7 +541,7 @@ export async function initializeUserPreferences(
 
   if (existing.data) {
     // Preferences already exist, return them
-    return existing;
+    return { data: existing.data, error: existing.error };
   }
 
   // Create default preferences

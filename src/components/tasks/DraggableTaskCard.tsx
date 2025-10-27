@@ -8,12 +8,16 @@ interface DraggableTaskCardProps {
   task: Task;
   onToggleStatus: (taskId: string) => Promise<void>;
   expandable?: boolean;
+  onEdit?: (task: Task) => void;
+  onDelete?: (taskId: string) => void;
 }
 
 export function DraggableTaskCard({
   task,
   onToggleStatus,
   expandable = false,
+  onEdit,
+  onDelete,
 }: DraggableTaskCardProps) {
   const {
     attributes,
@@ -38,6 +42,8 @@ export function DraggableTaskCard({
         onToggleStatus={onToggleStatus}
         expandable={expandable}
         dragHandleProps={{ ...attributes, ...listeners }}
+        onEdit={onEdit}
+        onDelete={onDelete}
       />
     </div>
   );

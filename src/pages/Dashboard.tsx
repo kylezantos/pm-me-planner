@@ -39,6 +39,7 @@ import { useCalendarSync } from "@/lib/google";
 
 // UI Components
 import { SimpleCreateTaskModal } from "@/components/tasks/SimpleCreateTaskModal";
+import { EditTaskModal } from "@/components/tasks/EditTaskModal";
 import { SimpleCreateBlockModal } from "@/components/blocks/SimpleCreateBlockModal";
 import { CreateBlockTypeModal } from "@/components/blocks/CreateBlockTypeModal";
 import { DraggableTaskList } from "@/components/tasks/DraggableTaskList";
@@ -50,6 +51,7 @@ import { EmptyBlock } from "@/components/empty/EmptyBlock";
 import { InlineError } from "@/components/error/InlineError";
 import { CalendarDropZone } from "@/components/blocks/CalendarDropZone";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { TooltipProvider } from "@/ui/tooltip";
 import { showSuccess, showError } from "@/components/error/toastUtils";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import type { BlockInstance, Task } from "@/lib/types";
@@ -70,6 +72,7 @@ function Dashboard({ userId }: DashboardProps) {
   const assignTaskToBlock = useTasksStore((state) => state.assignTaskToBlock);
   const fetchTasksByBlockInstance = useTasksStore((state) => state.fetchTasksByBlockInstance);
   const fetchBacklogTasks = useTasksStore((state) => state.fetchBacklogTasks);
+  const deleteTask = useTasksStore((state) => state.deleteTask);
 
   // Blocks state
   const blocks = useBlocksStore((state) => state.blocks);
@@ -84,6 +87,8 @@ function Dashboard({ userId }: DashboardProps) {
 
   // Modal state
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [isCreateBlockModalOpen, setIsCreateBlockModalOpen] = useState(false);
   const [isCreateBlockTypeModalOpen, setIsCreateBlockTypeModalOpen] = useState(false);
   const [blockCreationDefaults, setBlockCreationDefaults] = useState<{
@@ -200,9 +205,35 @@ function Dashboard({ userId }: DashboardProps) {
     setIsCreateBlockModalOpen(true);
   };
 
+  // Handle edit task
+  const handleEditTask = (task: Task) => {
+    setTaskToEdit(task);
+    setIsEditTaskModalOpen(true);
+  };
+
+  // Handle delete task with confirmation
+  const handleDeleteTask = async (taskId: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this task? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      await deleteTask(taskId);
+      showSuccess('Task deleted', 'The task has been removed');
+
+      // If the deleted task was in a selected block, refresh that block's tasks
+      if (selectedBlock) {
+        const tasks = await fetchTasksByBlockInstance(selectedBlock.id);
+        setBlockTasks((prev) => ({ ...prev, [selectedBlock.id]: tasks }));
+      }
+    } catch (error) {
+      showError('Failed to delete task', error instanceof Error ? error.message : 'Unknown error');
+    }
+  };
+
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-full w-full">
+    <TooltipProvider>
+      <DndContext onDragEnd={handleDragEnd}>
+        <div className="flex flex-col h-full w-full">
         {/* Main Row: Left nav + content */}
         <div className="flex flex-1 min-h-0 w-full items-stretch gap-2">
           {/* Left Sidebar */}
@@ -324,7 +355,7 @@ function Dashboard({ userId }: DashboardProps) {
           </div>
         </div>
 
-        <div className="flex flex-1 min-h-0 w-full items-start">
+        <div className="flex flex-1 min-h-0 w-full items-stretch">
           {/* Task Backlog Panel */}
           <div className="flex w-64 lg:w-72 xl:w-80 flex-none flex-col items-start gap-4 self-stretch border-r border-solid border-neutral-border bg-default-background px-4 py-4 overflow-y-auto">
             <div className="flex w-full flex-col items-start gap-4">
@@ -384,6 +415,8 @@ function Dashboard({ userId }: DashboardProps) {
                   tasks={filteredBacklog}
                   onToggleStatus={handleToggleTask}
                   expandable={true}
+                  onEdit={handleEditTask}
+                  onDelete={handleDeleteTask}
                 />
               )}
             </div>
@@ -400,7 +433,7 @@ function Dashboard({ userId }: DashboardProps) {
           </div>
 
           {/* Calendar View */}
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden self-stretch">
             <CalendarView
               userId={userId}
               onSelectEvent={handleCalendarEventSelect}
@@ -495,6 +528,8 @@ function Dashboard({ userId }: DashboardProps) {
                           key={task.id}
                           task={task}
                           onToggleStatus={handleToggleTask}
+                          onEdit={handleEditTask}
+                          onDelete={handleDeleteTask}
                         />
                       ))}
                     </div>
@@ -533,7 +568,7 @@ function Dashboard({ userId }: DashboardProps) {
     </div>
 
     {/* Bottom Claude Input Bar */}
-    <div className="flex flex-none w-full items-center justify-center gap-3 border-t border-solid border-neutral-border bg-default-background px-36 py-3">
+    <div className="flex flex-none w-full items-center justify-center gap-3 border-t border-solid border-neutral-border bg-default-background px-36 py-3 relative z-10">
         <Button
           size="sm"
           variant="ghost"
@@ -563,7 +598,7 @@ function Dashboard({ userId }: DashboardProps) {
     </div>
 
     {/* Status Bar */}
-    <div className="flex flex-none w-full items-start border-t border-solid border-neutral-border bg-default-background">
+    <div className="flex flex-none w-full items-start border-t border-solid border-neutral-border bg-default-background relative z-10">
         <div className="flex grow shrink-0 basis-0 items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -625,8 +660,19 @@ function Dashboard({ userId }: DashboardProps) {
         onOpenChange={setIsCreateBlockTypeModalOpen}
         userId={userId}
       />
+
+      {/* Edit Task Modal */}
+      {taskToEdit && (
+        <EditTaskModal
+          open={isEditTaskModalOpen}
+          onOpenChange={setIsEditTaskModalOpen}
+          task={taskToEdit}
+          userId={userId}
+        />
+      )}
     </div>
     </DndContext>
+    </TooltipProvider>
   );
 }
 

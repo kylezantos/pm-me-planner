@@ -5,7 +5,17 @@ import {
   ChevronRight,
   Clock,
   AlertCircle,
+  MoreVertical,
+  Edit,
+  Trash2,
 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/dropdown-menu';
 import { TaskCheckbox } from './TaskCheckbox';
 import type { Task } from '@/lib/types';
 
@@ -16,6 +26,10 @@ interface TaskCardProps {
   expandable?: boolean;
   /** If provided, renders drag handle for dnd-kit */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  /** Callback when edit is clicked */
+  onEdit?: (task: Task) => void;
+  /** Callback when delete is clicked */
+  onDelete?: (taskId: string) => void;
 }
 
 export function TaskCard({
@@ -23,6 +37,8 @@ export function TaskCard({
   onToggleStatus,
   expandable = false,
   dragHandleProps,
+  onEdit,
+  onDelete,
 }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -108,9 +124,50 @@ export function TaskCard({
           </span>
         </div>
 
-        {/* Priority indicator */}
-        <div className="flex items-center">
-          <AlertCircle className={`h-5 w-5 ${getPriorityColor(task.priority)}`} />
+        {/* Priority indicator & actions */}
+        <div className="flex items-center gap-2">
+          {/* Priority tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center">
+                <AlertCircle className={`h-5 w-5 ${getPriorityColor(task.priority)}`} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Priority: {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Actions menu (only show if onEdit or onDelete are provided) */}
+          {(onEdit || onDelete) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-neutral-100 transition-colors"
+                  aria-label="Task actions"
+                >
+                  <MoreVertical className="h-4 w-4 text-default-font" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(task)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem
+                    onClick={() => onDelete(task.id)}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

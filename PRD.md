@@ -442,6 +442,23 @@ interface UserPreferences {
 - File storage/management
 - Billing/invoicing features
 
+## Related Documentation
+
+For detailed implementation guidance, see:
+
+**Root-Level Documentation:**
+- **[README.md](README.md)** - Project overview and quick start
+- **[CLAUDE.md](CLAUDE.md)** / **[AGENTS.md](AGENTS.md)** - Agent guidance for working with this codebase
+
+**Reference Documentation:**
+- **[docs/reference/implementation-plan.md](docs/reference/implementation-plan.md)** - 11-phase development roadmap with step-by-step implementation details
+- **[docs/reference/ui-component-roadmap.md](docs/reference/ui-component-roadmap.md)** - Living document tracking UI components and states to be implemented across phases
+- **[docs/reference/DATABASE_SCHEMA.md](docs/reference/DATABASE_SCHEMA.md)** - Database schema design and models
+- **[docs/reference/SECURITY_AND_PORTABILITY.md](docs/reference/SECURITY_AND_PORTABILITY.md)** - Credential management and multi-user scenarios
+
+**Framework Documentation:**
+- **[docs/frameworks/](docs/frameworks/)** - Comprehensive reference docs for Tauri, Supabase, Google Calendar API, and all other frameworks
+
 ---
 
 **Document Version:** 0.3
