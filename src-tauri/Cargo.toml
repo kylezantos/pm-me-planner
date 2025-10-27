@@ -27,4 +27,5 @@ base64 = "0.22"
 thiserror = "1"
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-shell = "2"
 
