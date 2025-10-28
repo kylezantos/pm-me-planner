@@ -5,6 +5,7 @@ import { Textarea } from '@/ui/textarea';
 import { Card } from '@/ui/card';
 import { Avatar } from '@/ui/avatar';
 import { Send, Bot, User, Trash2 } from 'lucide-react';
+import { useAISettingsStore } from '@/stores/aiSettingsStore';
 
 interface Message {
   id: string;
@@ -14,14 +15,13 @@ interface Message {
 }
 
 interface ChatTerminalProps {
-  aiCommand?: string; // Default: 'claude'
   className?: string;
 }
 
 export function ChatTerminal({
-  aiCommand = 'claude',
   className = ''
 }: ChatTerminalProps) {
+  const { settings } = useAISettingsStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,19 +29,24 @@ export function ChatTerminal({
   const commandRef = useRef<ReturnType<typeof Command.create> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Get full AI command with args
+  const aiCommand = settings.commandArgs
+    ? `${settings.command} ${settings.commandArgs}`
+    : settings.command;
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Initialize AI process on mount
+  // Initialize AI process on mount and when settings change
   useEffect(() => {
     connectToAI();
     return () => {
       // Cleanup on unmount
       commandRef.current = null;
     };
-  }, [aiCommand]);
+  }, [settings.command, settings.commandArgs]);
 
   const connectToAI = async () => {
     try {
