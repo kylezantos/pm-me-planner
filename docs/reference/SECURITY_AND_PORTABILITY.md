@@ -53,8 +53,15 @@ We'll use Vite's environment variable system:
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGc...
 VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 VITE_ANTHROPIC_API_KEY=sk-ant-xxxxx
+```
+
+**Backend-only environment (.env for Tauri/Rust):**
+```bash
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
+GOOGLE_REDIRECT_URI=http://localhost:1420/oauth/callback
+CALENDAR_TOKEN_SECRET=change_me
 ```
 
 **Production (Tauri build):**
@@ -63,9 +70,9 @@ VITE_ANTHROPIC_API_KEY=sk-ant-xxxxx
 
 ### Variable Naming Convention
 
-- `VITE_` prefix = Available in frontend React code
-- No prefix = Backend/Rust only (Tauri commands)
-- All sensitive data should be `VITE_` prefixed for easy identification
+- `VITE_` prefix = Available in frontend React code (non-sensitive only)
+- No prefix = Backend/Rust only (Tauri commands, keep secrets here)
+- Sensitive data (client secrets, encryption keys) **must not** use `VITE_`
 
 ---
 
@@ -89,13 +96,18 @@ VITE_ANTHROPIC_API_KEY=sk-ant-xxxxx
 
 #### Approach 2: Environment Variable (More Portable)
 ```bash
-# .env.local
+# Frontend (.env.local)
 VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 VITE_GOOGLE_REDIRECT_URI=http://localhost:1420/oauth/callback
+
+# Backend (.env or OS keychain)
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
+GOOGLE_REDIRECT_URI=http://localhost:1420/oauth/callback
+CALENDAR_TOKEN_SECRET=change_me
 ```
 
-**Recommendation:** Use Approach 2 for easier portability and clearer setup
+**Recommendation:** Use environment variables split between frontend and backend for portability and security
 
 ---
 
