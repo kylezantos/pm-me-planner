@@ -105,17 +105,47 @@ export function ChatTerminal({
   const handleSend = async () => {
     if (!input.trim() || !isConnected || isProcessing) return;
 
+    const userInput = input;
+
     // Add user message
-    addMessage('user', input);
-
-    // TODO: Send input to AI process via stdin
-    // This requires the Command API to support stdin writes
-    // For now, we'll simulate a response
-    setIsProcessing(true);
+    addMessage('user', userInput);
     setInput('');
+    setIsProcessing(true);
 
-    // Placeholder: In real implementation, write to AI process stdin
-    // await command.stdin.write(input + '\n');
+    try {
+      // Create a new command instance for this message
+      // This approach spawns a new process per message, which works better
+      // for Claude Code/Codex that expect single-shot commands
+      const helperCommand = Command.create('bash', [
+        '-c',
+        `echo "${userInput.replace(/"/g, '\\"')}" | ${aiCommand}`
+      ]);
+
+      let responseBuffer = '';
+
+      helperCommand.stdout.on('data', (line) => {
+        responseBuffer += line + '\n';
+      });
+
+      helperCommand.on('close', () => {
+        if (responseBuffer.trim()) {
+          addMessage('assistant', responseBuffer.trim());
+        }
+        setIsProcessing(false);
+      });
+
+      helperCommand.on('error', (error) => {
+        console.error('Command error:', error);
+        addMessage('assistant', 'Error: Failed to execute command');
+        setIsProcessing(false);
+      });
+
+      await helperCommand.spawn();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      addMessage('assistant', 'Error: Failed to send message to AI');
+      setIsProcessing(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
